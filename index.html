@@ -1207,7 +1207,7 @@ body{margin:0}
 @media (max-width:600px){.ab-in{padding:6px 16px}.ab-brand small,.ab-chip span{display:none}.ab-chip{padding:3px}.ab-chip svg{display:none}}
 </style>
 <div id="xc-login" class="xc-login" hidden></div>
-<script id="xc-shim">window.XC_BUILD='2026-10-26 14:47';
+<script id="xc-shim">window.XC_BUILD='2026-10-26 17:26';
 (function(){
 'use strict';
 var TOKEN_KEY='xc_token';
@@ -2601,16 +2601,10 @@ function exportMisa(from,to){
   var name='Phan_ca_MISA_'+siteSlug()+'_'+from+'_'+to+'.xlsx',wks=misaWeeksIn(from,to);
   withExcel(function(EJ){
     var wb=new EJ.Workbook();wb.creator=TITLE;
-    var m=wb.addWorksheet('Phân ca'),l=wb.addWorksheet('Danh sách'),ref=wb.addWorksheet('Mã ca');
-    xHeader(m,[['STT',6],['Mã nhân viên',14],['Họ và tên',24]].concat(dates.map(function(dk){return [dm(dk)+'/'+dk.slice(0,4),11];})));
-    m.views=[{state:'frozen',xSplit:3,ySplit:1}];var colW=dates.map(function(){return 11;});
-    staff.forEach(function(st,i){var n=i+2;
-      m.getCell(n,1).value=i+1;m.getCell(n,2).value=st.code||'';m.getCell(n,3).value=st.name;
-      if(!String(st.code||'').trim())xFill(m.getCell(n,2),'FFFFD7D5');
-      grid[i].forEach(function(c,j){if(c===null)return;var cell=m.getCell(n,4+j),v=misaVal(c);cell.value=v;cell.alignment={horizontal:'center'};colW[j]=Math.max(colW[j],String(v||'').length+2);
-        var pq=(c.s&&c.s!=='O')?pos(c.p):null;if(pq)xFill(cell,posArgb(pq));});
-    });
-    colW.forEach(function(w,j){m.getColumn(4+j).width=Math.min(40,w);});
+    misaBangPhanCa(wb,dates,staff.map(function(st,i){return {code:st.code,name:st.name,
+      vals:grid[i].map(function(c){return c===null?null:misaVal(c);}),
+      fills:grid[i].map(function(c){var pq=c&&c.s&&c.s!=='O'?pos(c.p):null;return pq?posArgb(pq):null;})};}));
+    var l=wb.addWorksheet('Danh sách'),ref=wb.addWorksheet('Mã ca');
     xHeader(l,[['STT',6],['Mã nhân viên',14],['Họ và tên',24],['Ngày',12],['Mã ca MISA',16],['Ca trên công cụ',16],['Giờ ca',14],['Vị trí',18],['Ghi chú',14]]);
     var r=2;
     staff.forEach(function(st,i){grid[i].forEach(function(c,j){
@@ -2624,9 +2618,9 @@ function exportMisa(from,to){
     rows.push(['Nghỉ, không có ca','',S.misa.off||'(để trống)']);rows.push(['Nghỉ phép','',S.misa.leave||S.misa.off||'(để trống)']);
     rows.forEach(function(a,i){a.forEach(function(x,q){ref.getCell(i+2,q+1).value=x;});});
     var nr=rows.length+3;ref.getCell(nr,1).value='Site: '+(S.site||'')+' · Kỳ: '+dm(from)+'/'+from.slice(0,4)+' – '+dm(to)+'/'+to.slice(0,4);
-    ref.getCell(nr+1,1).value='Trang Phân ca: mỗi dòng 1 nhân viên, mỗi cột 1 ngày, ô là mã ca MISA. Trang Danh sách: mỗi dòng 1 ca đã xếp. Dùng trang khớp với mẫu nhập khẩu của MISA.';
+    ref.getCell(nr+1,1).value='Trang Bang_phan_ca đúng mẫu nhập khẩu bảng phân ca của MISA: chọn trang này khi nhập khẩu. Trang Danh sách: mỗi dòng 1 ca đã xếp, để đối chiếu.';
     [nr,nr+1].forEach(function(x){ref.getCell(x,1).font={name:'Arial',italic:true,color:{argb:XGREY}};});
-    var lg=nr+3;ref.getCell(lg,1).value='Màu ô ở trang Phân ca = vị trí:';ref.getCell(lg,1).font={name:'Arial',bold:true};S.positions.forEach(function(pp,q){var lc0=ref.getCell(lg+1+q,1);lc0.value=pp.name;xFill(lc0,posArgb(pp));});
+    var lg=nr+3;ref.getCell(lg,1).value='Màu ô ở trang Bang_phan_ca = vị trí:';ref.getCell(lg,1).font={name:'Arial',bold:true};S.positions.forEach(function(pp,q){var lc0=ref.getCell(lg+1+q,1);lc0.value=pp.name;xFill(lc0,posArgb(pp));});
     return wb;
   },name,function(){
     if(canEdit()&&wks.length){var at=new Date().toISOString();wks.forEach(function(k){S.misaOut[k]={at:at,sig:misaSig(k)};});
@@ -5747,13 +5741,10 @@ function coreMisa(){
   if(!ms.some(function(p){return dates.some(function(k){return coreWorks(val(p,k));});})){toast(R.label+' chưa có ai đăng ký ca.');return;}
   withExcel(function(EJ){
     var wb=new EJ.Workbook();wb.creator=TITLE;
-    var m=wb.addWorksheet('Phân ca'),l=wb.addWorksheet('Danh sách'),ref=wb.addWorksheet('Mã ca');
-    xHeader(m,[['STT',6],['Mã nhân viên',14],['Họ và tên',24]].concat(dates.map(function(dk){return [dm(dk)+'/'+dk.slice(0,4),16];})));
-    m.views=[{state:'frozen',xSplit:3,ySplit:1}];
-    ms.forEach(function(p,i){var r=i+2;
-      m.getCell(r,1).value=i+1;m.getCell(r,2).value=p.id;m.getCell(r,3).value=p.name;
-      dates.forEach(function(k,j){var x=val(p,k),c=m.getCell(r,4+j);c.value=coreMisaVal(x);c.alignment={horizontal:'center'};if(!coreWorks(x)&&x)c.font={name:'Arial',color:{argb:XGREY}};});
-    });
+    /* trang đầu đúng mẫu nhập khẩu bảng phân ca của MISA (26/10, misaBangPhanCa ở lichtuxep.js) */
+    misaBangPhanCa(wb,dates,ms.map(function(p){return {code:p.id,name:p.name,
+      vals:dates.map(function(k){return coreMisaVal(val(p,k));}),grey:dates.map(function(k){var x=val(p,k);return !!x&&!coreWorks(x);})};}));
+    var l=wb.addWorksheet('Danh sách'),ref=wb.addWorksheet('Mã ca');
     xHeader(l,[['STT',6],['Mã nhân viên',14],['Họ và tên',24],['Ngày',12],['Mã ca MISA',20],['Giờ công',10],['Ghi chú',16]]);
     var r=2;
     ms.forEach(function(p){dates.forEach(function(k){var x=String(val(p,k)).trim();if(!x)return;var v=coreMisaVal(x),kd=coreKind(x);if(!v&&coreWorks(x))return;
@@ -6508,6 +6499,30 @@ function ltClick(e){
   else if(a==='misa'){var wk=LT.res.week;closeLt();exportMisa(wk,addDays(wk,6));}
 }
 $app.addEventListener('click',function(e){var b=e.target.closest('[data-act="ltopen"]');if(!b||view.mod!=='xc')return;if(!canEdit()){toast('Tài khoản này chỉ xem.');return;}openLt();});
+
+/* ---------- trang Bang_phan_ca đúng mẫu nhập khẩu MISA (26/10/2026, theo file mẫu Phúc gửi) ----------
+   Dòng 1 "Xem ví dụ mẫu nhập khẩu bảng phân ca", dòng 2 tiêu đề gộp ô, dòng 3 trống, dòng 4 tiêu đề cột:
+   "Mã nhân viên (*)" | "Họ và tên" | mỗi ngày 1 cột ghi DD/MM/YYYY (chữ); dữ liệu từ dòng 5. Nhiều ca: "CA1; CA2". Không có cột STT.
+   rows: [{code, name, vals:[chuỗi hoặc null = ngoài thời gian làm], fills:[màu ô hoặc null], grey:[true = ô nghỉ]}] */
+var MISA_HEAD='FFD0CECE';
+function misaBangPhanCa(wb,dates,rows){
+  var m=wb.addWorksheet('Bang_phan_ca'),nc=2+dates.length,F={name:'Times New Roman',size:12};
+  m.getCell('A1').value='Xem ví dụ mẫu nhập khẩu bảng phân ca';m.getCell('A1').font={name:'Times New Roman',size:12,italic:true,color:{argb:'FF0563C1'},underline:true};
+  m.mergeCells(2,1,2,Math.max(nc,6));m.getCell('A2').value='BẢNG PHÂN CA CHO NHÂN VIÊN';m.getCell('A2').font={name:'Times New Roman',size:14,bold:true};m.getCell('A2').alignment={horizontal:'center',vertical:'middle'};m.getRow(2).height=20;
+  var head=['Mã nhân viên (*)','Họ và tên'].concat(dates.map(function(dk){return dm(dk)+'/'+dk.slice(0,4);}));
+  head.forEach(function(t,i){var c=m.getCell(4,i+1);c.value=t;c.font={name:'Times New Roman',size:12,bold:true};c.fill={type:'pattern',pattern:'solid',fgColor:{argb:MISA_HEAD}};c.alignment={horizontal:'center',vertical:'middle',wrapText:true};
+    c.border={top:{style:'thin'},left:{style:'thin'},bottom:{style:'thin'},right:{style:'thin'}};
+    if(i===0)c.value={richText:[{text:'Mã nhân viên ',font:{name:'Times New Roman',size:12,bold:true}},{text:'(*)',font:{name:'Times New Roman',size:12,bold:true,color:{argb:'FFFF0000'}}}]};});
+  m.getColumn(1).width=20;m.getColumn(2).width=26;var colW=dates.map(function(){return 13;});
+  rows.forEach(function(r,i){var n=5+i;
+    var a=m.getCell(n,1),b=m.getCell(n,2);a.value=r.code||'';b.value=r.name||'';a.font=F;b.font=F;if(!String(r.code||'').trim())xFill(a,'FFFFD7D5');
+    r.vals.forEach(function(v,j){if(v===null)return;var c=m.getCell(n,3+j);c.value=v||'';c.font=r.grey&&r.grey[j]?{name:'Times New Roman',size:12,color:{argb:XGREY}}:F;c.alignment={horizontal:'center'};colW[j]=Math.max(colW[j],String(v||'').length+2);
+      if(r.fills&&r.fills[j])xFill(c,r.fills[j]);});
+  });
+  colW.forEach(function(w,j){m.getColumn(3+j).width=Math.min(40,w);});
+  m.views=[{state:'frozen',xSplit:2,ySplit:4}];
+  return m;
+}
 
 /* ================= BỘ LỌC (26/10/2026, Phúc) =================
    Một bộ lọc dùng chung cho các bảng của Xếp ca: tên / mã NV, vị trí, ca (giờ), FT / PT, chỉ chỗ thiếu, chỉ ô cần xem lại.
