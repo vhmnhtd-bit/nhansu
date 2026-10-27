@@ -1216,7 +1216,7 @@ body{margin:0}
 @media (max-width:600px){.ab-in{padding:6px 16px}.ab-brand small,.ab-chip span{display:none}.ab-chip{padding:3px}.ab-chip svg{display:none}}
 </style>
 <div id="xc-login" class="xc-login" hidden></div>
-<script id="xc-shim">window.XC_BUILD='2026-10-27 10:20';
+<script id="xc-shim">window.XC_BUILD='2026-10-27 10:37';
 (function(){
 'use strict';
 var TOKEN_KEY='xc_token';
@@ -1314,10 +1314,10 @@ function renderBar(){
 var ROLE_INFO={admin:['Quản lý chuỗi','Toàn quyền: mọi site, thiết lập, duyệt, chấm đánh giá, quản lý tài khoản'],cht:['CHT','Quản lý 1 site: xếp ca, nhân sự, chấm điểm của site đó'],core:['Core team','Đăng ký lịch core team của mình, xem kết quả đánh giá của mình'],hc:['Hành chính','Xem mọi site để xuất MISA, công, lương, hồ sơ nhân sự, báo cáo; không sửa dữ liệu site']};
 /* bảng phân quyền theo vai trò (27/10/2026): khoá, nhóm, tên, mặc định cht/core/hc (null = vai trò đó không có quyền này). Giữ khớp PERM_DEF ở Code.gs. */
 var PERM_CAT=[
-  ['v_dash','Xem','Tổng quan nhân sự',1,null,1],['v_hr','Xem','Nhân sự: hồ sơ, cơ cấu, biến động',1,null,1],['v_eval','Xem','Đánh giá: chấm điểm, diện theo dõi',1,null,0],
-  ['v_xc','Xem','Xếp ca: lịch tuần, đăng ký, đổi ca, nghỉ phép, công',1,null,1],['v_ot','Xem','Công thêm',1,null,1],['v_report','Xem','Báo cáo',1,null,1],['v_core','Xem','Lịch core team',1,1,1],
-  ['e_sched','Sửa','Xếp lịch, đăng ký ca, đổi ca, nghỉ phép (site mình)',1,null,null],['e_setup','Sửa','Thiết lập site, nhân viên, hồ sơ nhân viên',1,null,null],
-  ['e_score','Sửa','Chấm điểm nhân viên, điểm cộng, mở phiếu diện theo dõi',1,null,null],['e_ot','Sửa','Ghi khoản công thêm',1,null,null],['e_core','Sửa','Đăng ký lịch core team của chính mình',1,1,1],
+  ['v_dash','Xem','Tổng quan nhân sự',1,0,1],['v_hr','Xem','Nhân sự: hồ sơ, cơ cấu, biến động',1,0,1],['v_eval','Xem','Đánh giá: chấm điểm, diện theo dõi',1,0,0],
+  ['v_xc','Xem','Xếp ca: lịch tuần, đăng ký, đổi ca, nghỉ phép, công',1,0,1],['v_ot','Xem','Công thêm',1,0,1],['v_report','Xem','Báo cáo',1,0,1],['v_core','Xem','Lịch core team',1,1,1],
+  ['e_sched','Sửa','Xếp lịch, đăng ký ca, đổi ca, nghỉ phép',1,0,0],['e_setup','Sửa','Thiết lập site, nhân viên, hồ sơ nhân viên',1,0,0],
+  ['e_score','Sửa','Chấm điểm nhân viên, điểm cộng, mở phiếu diện theo dõi',1,0,0],['e_ot','Sửa','Ghi khoản công thêm',1,0,0],['e_core','Sửa','Đăng ký lịch core team của chính mình',1,1,1],
   ['x_misa','Xuất file','Xuất file MISA (lịch site, lịch core team)',1,1,1],['x_file','Xuất file','Tải Excel, PDF, ảnh: báo cáo, công, danh sách, đánh giá…',1,1,1]];
 var PERM_ROLES=[['cht','CHT',3],['core','Core team',4],['hc','Hành chính',5]];
 function showPerms(form,er,flash){
@@ -1327,7 +1327,7 @@ function showPerms(form,er,flash){
     PERM_ROLES.forEach(function(R){cur[R[0]]={};PERM_CAT.forEach(function(p){var d=p[R[2]];if(d==null)return;var v=saved[R[0]]&&typeof saved[R[0]][p[0]]==='boolean'?saved[R[0]][p[0]]:!!d;cur[R[0]][p[0]]=v;});});
     var grp='',rows=PERM_CAT.map(function(p){var g=p[1]!==grp?'<tr class="pg"><th colspan="5">'+p[1]+'</th></tr>':'';grp=p[1];
       return g+'<tr><td>'+esc(p[2])+'</td><td class="c"><input type="checkbox" checked disabled title="Quản lý chuỗi luôn có đủ quyền"></td>'+PERM_ROLES.map(function(R){var d=p[R[2]];return d==null?'<td class="c na" title="Vai trò này không dùng quyền này">—</td>':'<td class="c"><input type="checkbox" data-pr="'+R[0]+'" data-pk="'+p[0]+'"'+(cur[R[0]][p[0]]?' checked':'')+' aria-label="'+esc(R[1]+': '+p[2])+'"></td>';}).join('')+'</tr>';}).join('');
-    form.innerHTML='<div class="xc-accf xc-perm"><h3>Phân quyền theo vai trò</h3><p class="xc-hint">Tích quyền cho từng vai trò. Quản lý chuỗi luôn có đủ quyền. Quyền <b>Sửa</b> được máy chủ chặn thật; quyền <b>Xem</b> và <b>Xuất file</b> do web ẩn mục, chặn nút tải. Người dùng thấy thay đổi khi tải lại trang hoặc đăng nhập lại.</p>'
+    form.innerHTML='<div class="xc-accf xc-perm"><h3>Phân quyền theo vai trò</h3><p class="xc-hint">Tích quyền cho từng vai trò. Quản lý chuỗi luôn có đủ quyền. Quyền <b>Sửa</b> được máy chủ chặn thật; quyền <b>Xem</b> và <b>Xuất file</b> do web ẩn mục, chặn nút tải. Người dùng thấy thay đổi khi tải lại trang hoặc đăng nhập lại.</p><p class="xc-hint"><b>Phạm vi:</b> CHT chỉ ở site của mình. Core team và Hành chính không gắn site nên quyền Xem / Sửa site áp dụng cho <b>mọi site</b>. Duyệt công thêm, duyệt diện theo dõi, mở lại phiếu chấm, thiết lập đánh giá và tài khoản luôn chỉ quản lý chuỗi làm.</p>'
       +'<div class="xc-ptbl"><table><thead><tr><th>Quyền</th><th class="c">Quản lý chuỗi</th>'+PERM_ROLES.map(function(R){return '<th class="c">'+R[1]+'</th>';}).join('')+'</tr></thead><tbody>'+rows+'</tbody></table></div>'
       +'<div class="xc-row"><button type="button" class="xc-go" id="pm-save">Lưu phân quyền</button><button type="button" class="xc-sec" id="pm-def">Về mặc định</button><button type="button" class="xc-sec" id="pm-cancel">Đóng</button></div></div>';
     document.getElementById('pm-cancel').onclick=function(){form.innerHTML='';};
@@ -2095,7 +2095,7 @@ function blankSite(name,key){
   return s;
 }
 function openSite(uid,ro){
-  if(OFFICE)ro=true;
+  if(OFFICE&&!can('e_sched')&&!can('e_setup'))ro=true;
   unsubAll();closePop();
   SITE={uid:uid,ro:!!ro,updatedAt:null};S=null;lastCfg='';lastWeeks={};sentCfg='';sentWeeks={};view.onboard=false;view.dberr='';
   var WK={weeks:{},reg:{}};
@@ -3702,7 +3702,9 @@ function modOk(m){return !MOD_PERM[m]||can(MOD_PERM[m]);}
 function permFix(){if(ROLE==='boot'||ROLE==='noaccess'||modOk(view.mod))return;var all=[];GROUPS.forEach(function(g){g[2].forEach(function(m){all.push(m);});});
   for(var i=0;i<all.length;i++)if(modOk(all[i])&&(all[i]!=='perf'&&all[i]!=='perfmgr'||perfCanSee(all[i]))){view.mod=all[i];lsSet('hr_mod',all[i]);return;}}
 /* k: quyền sửa cần có (mặc định e_setup: hồ sơ, thiết lập); chấm điểm dùng e_score, công thêm e_ot */
-function hrCanEdit(k){return ((ROLE==='mgr'&&!OFFICE)||ROLE==='demo'||(ROLE==='cht'&&SITE&&!SITE.ro))&&can(k||'e_setup');}
+function hrCanEdit(k){return (ROLE==='mgr'||ROLE==='demo'||(ROLE==='cht'&&SITE&&!SITE.ro))&&can(k||'e_setup');}
+/* core team / hành chính có ít nhất 1 quyền xem site → chạy như quản lý chuỗi chế độ OFFICE (xem mọi site, sửa theo quyền e_*) */
+function permSiteView(){return ['v_dash','v_hr','v_eval','v_xc','v_ot','v_report'].some(can);}
 /* tài khoản hành chính không thấy nhóm Đánh giá (chấm điểm, diện theo dõi) */
 function navGroups(){return GROUPS.filter(function(g){return g[0]==='xc'?(modOk('xc')||modOk('ot')):g[2].some(function(m){return modOk(m)&&(m!=='perf'&&m!=='perfmgr'||perfCanSee(m));});});}
 function posName(s,id){for(var i=0;i<s.positions.length;i++)if(s.positions[i].id===id)return s.positions[i].name;return '';}
@@ -3765,7 +3767,7 @@ function navIcon(g){return NAV_ICON[g]?'<svg width="16" height="16" viewBox="0 0
 function hrNav(){
   if(ROLE==='core'){var cl=subLinks(GROUPS[GROUPS.length-1]);return '<nav class="mnav" aria-label="Menu chính"><div class="brand"><b>Quản lý nhân sự Miền Nam</b><span>Core team</span></div><div class="mlinks">'
     +cl.map(function(l){return '<button class="mlink'+(l.on?' on':'')+'" data-act="mod" data-v="'+l.v+'"'+(l.on?' aria-current="page"':'')+'>'+esc(l.t)+(l.x||'')+'</button>';}).join('')+'</div></nav><nav class="subnav" aria-hidden="true"></nav>';}
-  var who=ROLE==='mgr'?(OFFICE?'Hành chính · ':'Quản lý chuỗi · ')+MGR.sites.length+' site':ROLE==='demo'?'Site mẫu để tập dùng':(S&&S.site)||'';
+  var who=ROLE==='mgr'?(OFFICE?((window.XC_ME||{}).role==='core'?'Core team · ':'Hành chính · '):'Quản lý chuỗi · ')+MGR.sites.length+' site':ROLE==='demo'?'Site mẫu để tập dùng':(S&&S.site)||'';
   var cur=groupOf(view.mod);
   return '<nav class="mnav" aria-label="Menu chính"><div class="brand"><b>Quản lý nhân sự Miền Nam</b><span>'+esc(who)+'</span></div><div class="mlinks">'
     +navGroups().map(function(g){var on=g===cur;return '<button class="mlink'+(on?' on':'')+'" data-act="grp" data-v="'+g[0]+'"'+(on?' aria-current="page"':'')+' title="'+esc(g[1])+'">'+navIcon(g[0])+'<span>'+g[1]+'</span>'+(g[0]==='eval'?pipBadge():g[0]==='xc'?otBadge():'')+'</button>';}).join('')
@@ -4230,7 +4232,7 @@ function scItems(s,st,wk,e){
 function mval(it,v){if(v==null||v==='')return null;var n=+v;return isNaN(n)?null:Math.max(0,Math.min(it.p,n));}
 function itemText(id){var r='';SC_GROUPS.concat([{items:SC_IV.cash.concat(SC_IV.guide)}]).forEach(function(G){G.items.forEach(function(it){if(it[0]===id)r=it[2];});});if(id==='att')r='Chuyên cần & kỷ luật ca';return r||id;}
 function scDeadline(wk){var a=wk.split('-').map(Number);return Date.UTC(a[0],a[1]-1,a[2]+7,5,0,0);}
-function scLocked(uid,wk){if(ROLE==='mgr')return false;var d=HRD[uid]&&HRD[uid].sc[wk],open=d&&d.reopen&&new Date(d.reopen).getTime()>Date.now();return Date.now()>scDeadline(wk)&&!open;}
+function scLocked(uid,wk){if(ROLE==='mgr'&&!OFFICE)return false;var d=HRD[uid]&&HRD[uid].sc[wk],open=d&&d.reopen&&new Date(d.reopen).getTime()>Date.now();return Date.now()>scDeadline(wk)&&!open;}
 function scEntry(uid,wk,sid){var d=HRD[uid]&&HRD[uid].sc[wk];return (d&&d.staff&&d.staff[sid])||null;}
 function inWeekSt(st,wk){return (!st.start||st.start<=addDays(wk,6))&&(!st.quitDate||st.quitDate>=wk);}
 function weekDays(s,st,wk){return withSite(s,function(){var n=0;for(var d=0;d<7;d++){var c=getCell(wk,st.id,d);if(c&&c.s!=='O')n++;}return n;});}
@@ -4421,8 +4423,8 @@ function scStatePill(c){
 function renderScWeek(x){
   var wk=HR.scWk,cur=mondayOf(new Date()),fut=wk>cur,lock=scLocked(x.uid,wk),d=HRD[x.uid].sc[wk],past=Date.now()>scDeadline(wk),ro=!hrCanEdit('e_score')||lock||fut;
   var h='<div class="hrctl">'+scSiteSel(x)+'<div class="weeknav"><button class="btn icon" data-act="scwk" data-v="-7" aria-label="Tuần trước">‹</button><div class="wk"><b>Tuần '+isoWeek(wk)+'</b><span>'+dm(wk)+' – '+dmy(addDays(wk,6))+'</span></div><button class="btn icon" data-act="scwk" data-v="7" aria-label="Tuần sau">›</button></div>'
-    +'<span class="pill '+(fut?'':lock?'no':past?'wait':'ok')+'">'+(fut?'Tuần chưa tới':lock?'Đã khoá: quá hạn 12:00 '+dlabel(addDays(wk,7)):past?'Đã mở lại đến '+fmtTime(d.reopen):'Hạn chấm: 12:00 '+dlabel(addDays(wk,7)))+'</span>'
-    +(ROLE==='mgr'&&past?'<button class="btn sm" data-act="screopen">Mở lại cho CHT 24 giờ</button>':'')+'<button class="btn sm" data-xf="scweek">Tải Excel phiếu tuần</button></div>';
+    +'<span class="pill '+(fut?'':lock?'no':past?'wait':'ok')+'">'+(fut?'Tuần chưa tới':lock?'Đã khoá: quá hạn 12:00 '+dlabel(addDays(wk,7)):past?(d&&d.reopen&&new Date(d.reopen).getTime()>Date.now()?'Đã mở lại đến '+fmtTime(d.reopen):'Quá hạn 12:00 '+dlabel(addDays(wk,7))+' · CHT đã bị khoá, quản lý vẫn sửa được'):'Hạn chấm: 12:00 '+dlabel(addDays(wk,7)))+'</span>'
+    +(ROLE==='mgr'&&!OFFICE&&past?'<button class="btn sm" data-act="screopen">Mở lại cho CHT 24 giờ</button>':'')+'<button class="btn sm" data-xf="scweek">Tải Excel phiếu tuần</button></div>';
   var staff=x.s.staff.filter(function(st){return inWeekSt(st,wk);}).sort(function(a,b){return String(a.code||'~').localeCompare(String(b.code||'~'))||a.name.localeCompare(b.name);});
   if(HR.scSel){var st=staff.filter(function(s){return s.id===HR.scSel;})[0];if(st)h+=renderScForm(x,st,wk,ro);else HR.scSel=null;}
   var rows=staff.map(function(st){return {st:st,c:scCalc(x.s,st,wk,scEntry(x.uid,wk,st.id)),days:weekDays(x.s,st,wk)};}),nd=rows.filter(function(r){return r.c.state==='done'||r.c.state==='skip';}).length;
@@ -4612,7 +4614,7 @@ function pipCreate(){
     if(P.direct){d.direct=P.direct;d.due=t;}},'Đã mở phiếu theo dõi '+st.name+'. Bước tiếp: trao đổi 1-1 và cho nhân viên ký xác nhận.').then(function(d){if(d){HR.pipNew=null;HR.pipSel={uid:x.uid,id:id};HR.pipDraft=null;render();}});
 }
 function renderPipDetail(x,st,p){
-  var ed=hrCanEdit('e_score'),cht=ed&&ROLE!=='mgr',mgr=ROLE==='mgr',step=pipStep(x,st,p),du=pipDue(x,st,p),t=todayKey();
+  var ed=hrCanEdit('e_score'),mgr=ROLE==='mgr'&&!OFFICE,cht=ed&&!mgr,step=pipStep(x,st,p),du=pipDue(x,st,p),t=todayKey();
   var D=HR.pipDraft&&HR.pipDraft.id===p.id?HR.pipDraft:(HR.pipDraft={id:p.id,talk:clone(p.talk||{date:t,signed:false,link:'',staffNote:''}),mid:'',end:{note:'',res:{},prop:''},dec:''});
   var coach=p.coach?(x.s.staff.filter(function(s){return s.id===p.coach;})[0]||{}).name:'CHT trực tiếp';
   var h='<div class="row"><button class="btn sm" data-act="pipback">← Danh sách theo dõi</button><button class="btn sm ghost" data-act="hrprof" data-id="'+esc(x.uid+'|'+st.id)+'">Hồ sơ nhân viên</button></div>'
@@ -7281,6 +7283,7 @@ function boot(){
       ME.id=x[0];ME.owner=!!x[1];
       if(ME.owner){ROLE='mgr';loadMgr();return;}
       if(window.XC_ME&&window.XC_ME.role==='hc'){OFFICE=true;ROLE='mgr';loadMgr();return;}
+      if(window.XC_ME&&window.XC_ME.role==='core'&&permSiteView()){OFFICE=true;ROLE='mgr';loadMgr();return;}
       if(window.XC_ME&&window.XC_ME.role==='core'){ROLE='core';view.mod='core';render();return;}
       if(!ME.id){ROLE='noaccess';render();return;}
       ROLE='cht';
