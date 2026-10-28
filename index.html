@@ -1144,6 +1144,14 @@ details.fold.ottypes>summary{display:flex;flex-wrap:wrap;align-items:baseline;ga
   .ltsteps li .btn{grid-column:1;grid-row:auto;justify-self:start}
 }
 @media (max-width:600px){.mlink span{display:none}.mlink{padding:8px 11px}.mlink.on span{display:inline}}
+
+/* ---------- nhập lịch từ Excel / MISA (28/10) ---------- */
+.ltpick{display:flex;flex-direction:column;gap:10px}
+.ltopt{display:grid;grid-template-columns:1fr auto;align-items:center;gap:4px 16px;border:1px solid #C7D2F7;background:var(--accent-soft);border-radius:12px;padding:14px 16px}
+.ltopt b{grid-column:1}.ltopt span{grid-column:1;font-size:12.5px;color:var(--muted)}.ltopt .btn{grid-column:2;grid-row:1/3}
+.ltor{text-align:center;font-size:12px;color:var(--muted);margin:2px 0;text-transform:uppercase;letter-spacing:.06em}
+.ltprev .chip.auto{border:1px dashed currentColor;background:transparent}
+@media (max-width:760px){.ltopt{grid-template-columns:1fr}.ltopt .btn{grid-column:1;grid-row:auto;justify-self:start}}
 </style>
 </head>
 <body>
@@ -1216,7 +1224,7 @@ body{margin:0}
 @media (max-width:600px){.ab-in{padding:6px 16px}.ab-brand small,.ab-chip span{display:none}.ab-chip{padding:3px}.ab-chip svg{display:none}}
 </style>
 <div id="xc-login" class="xc-login" hidden></div>
-<script id="xc-shim">window.XC_BUILD='2026-10-27 10:37';
+<script id="xc-shim">window.XC_BUILD='2026-10-28 12:44';
 (function(){
 'use strict';
 var TOKEN_KEY='xc_token';
@@ -2215,7 +2223,7 @@ function renderWeek(){
     +'<div class="kpis"><div class="kpi '+(st.short?'is-short':'is-ok')+'"><b>'+st.short+'</b><span>lượt còn thiếu</span></div>'
     +'<div class="kpi'+(st.over?' is-over':'')+'"><b>'+st.over+'</b><span>lượt dư</span></div>'
     +'<div class="kpi'+(issues.length?' is-short':'')+'"><b>'+issues.length+'</b><span>lưu ý nhân sự</span></div></div>'
-    +'<div class="actions"><button class="btn primary" data-act="auto">Tự xếp lịch</button><button class="btn" data-act="staffsched">Lịch gửi nhân viên</button><button class="btn" data-act="misaweek">Xuất file MISA</button>'+(canEdit()?'<button class="btn" data-act="ltopen">Nhập lịch tự xếp</button>':'')
+    +'<div class="actions"><button class="btn primary" data-act="auto">Tự xếp lịch</button><button class="btn" data-act="staffsched">Lịch gửi nhân viên</button><button class="btn" data-act="misaweek">Xuất file MISA</button>'+(canEdit()?'<button class="btn" data-act="ltopen">Nhập lịch (Excel / MISA)</button>':'')
     +cbtn('copyprev','Chép tuần trước','Bấm lần nữa để ghi đè tuần này','')
     +(st.over&&canEdit()?cbtn('trimover','Gỡ '+st.over+' lượt dư','Bấm lần nữa để gỡ','ghost'):'')
     +cbtn('clear','Xoá lịch tuần','Bấm lần nữa để xoá','ghost danger')+'</div></section>';
@@ -6378,7 +6386,7 @@ function buildLtWb(EJ,k){
   var F={name:'Arial',size:10},NC=4+14;
   ws.getCell('A1').value='LỊCH TUẦN '+isoWeek(k)+' · '+dm(k)+' – '+dm(end)+'/'+end.slice(0,4)+(S.site?' · '+S.site:'');ws.getCell('A1').font={name:'Arial',bold:true,size:14,color:{argb:XBLUE}};
   ws.getCell('A2').value='Tuần bắt đầu';ws.getCell('B2').value=xDate(k);ws.getCell('B2').numFmt='dd/mm/yyyy';ws.getCell('A2').font={name:'Arial',bold:true};ws.getCell('B2').font={name:'Arial',bold:true};
-  ws.getCell('A3').value='Mỗi ngày 2 cột: Ca (chọn trong danh sách, "Nghỉ" là ngày off) và Vị trí. Làm nhiều ca ở nhiều vị trí: ghi vị trí theo thứ tự ca, nối bằng " + ". Để trống = không đi làm. Không sửa ô Tuần bắt đầu và cột Mã NV. Bảng đối soát bên dưới tự tính.';
+  ws.getCell('A3').value='Mỗi ngày 2 cột: Ca (chọn trong danh sách, "Nghỉ" là ngày off) và Vị trí (không bắt buộc: để trống thì web tự gán vị trí đã đào tạo đang thiếu). Làm nhiều ca ở nhiều vị trí: ghi vị trí theo thứ tự ca, nối bằng " + ". Để trống = không đi làm. Không sửa ô Tuần bắt đầu và cột Mã NV. Bảng đối soát bên dưới tự tính.';
   ws.getCell('A3').font={name:'Arial',italic:true,size:10,color:{argb:XGREY}};ws.mergeCells(3,1,3,NC);ws.getRow(3).height=30;ws.getCell('A3').alignment={wrapText:true,vertical:'top'};
   /* dòng 4: tên ngày gộp 2 cột · dòng 5: tiêu đề cột */
   var cols=[['Mã NV',11],['Họ tên',24],['Vị trí chính',14],['Loại',6]];
@@ -6430,7 +6438,7 @@ function buildLtWb(EJ,k){
   g.getCell('A1').value='CÁCH DÙNG FILE LỊCH TỰ XẾP';g.getCell('A1').font={name:'Arial',bold:true,size:13,color:{argb:XBLUE}};
   ['1. Xếp lịch ở trang "Lịch tuần": mỗi người, mỗi ngày chọn Ca và Vị trí. File đã có sẵn lịch đang có trên web (nếu có).',
    '2. Ca: chọn trong danh sách; ghép nhiều ca chọn dòng có dấu " + ". "Nghỉ" = ngày off. Để trống = không đi làm.',
-   '3. Vị trí: chọn trong danh sách. Để trống thì web dùng vị trí chính của người đó.',
+   '3. Vị trí: không bắt buộc. Để trống thì web tự gán vị trí người đó đã đào tạo, ưu tiên chỗ đang thiếu. Có file phân ca xuất từ MISA (chỉ mã ca) thì nhập thẳng file đó, không cần file mẫu này.',
    '4. Bảng đối soát dưới lịch tự tính có / cần cho từng vị trí, từng ca: ô đỏ còn thiếu, ô vàng dư.',
    '5. Lưu file, vào web → Lịch tuần → Nhập lịch tự xếp → Chọn file. Web hiện bảng xem trước và lỗi; bấm Áp dụng để lưu.',
    '6. Áp dụng xong bấm Xuất file MISA để tải file phân ca nhập lên MISA chấm công.',
@@ -6443,101 +6451,163 @@ function buildLtWb(EJ,k){
 }
 function exportLtFile(k){withExcel(function(EJ){return buildLtWb(EJ,k);},ltSlug(k));}
 
-/* ---------- đọc file ---------- */
+/* ---------- đọc file ----------
+   2 dạng (28/10: Phúc cần nhập lịch cũ từ MISA để tính lương, file MISA chỉ có mã ca):
+   (a) file lịch mẫu của web: 1 tuần, mỗi ngày 2 cột "T2 · Ca" / "T2 · Vị trí";
+   (b) file phân ca MISA (Bang_phan_ca hoặc file xuất từ MISA): cột Mã nhân viên, Họ và tên, mỗi ngày 1 cột có ngày (DD/MM/YYYY,
+       DD/MM, ngày Excel), ô là mã ca MISA "CA1; CA2" (bỏ phần [địa điểm]); tối đa 62 ngày, nhiều tuần.
+   Ô không ghi vị trí: web tự gán vị trí người đó đã đào tạo đang thiếu nhất theo định biên (ltAutoPos), không báo lỗi. */
 function ltFindPos(t){var n=norm(t);if(!n)return null;return S.positions.filter(function(p){return norm(p.name)===n||norm(p.short)===n;})[0]||null;}
+function ltHdrDate(v,yr){
+  if(v instanceof Date&&!isNaN(v))return keyOf(new Date(v.getFullYear(),v.getMonth(),v.getDate()));
+  if(typeof v==='number'&&v>30000&&v<60000){var d=new Date(Date.UTC(1899,11,30)+Math.round(v)*864e5);return keyOf(new Date(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate()));}
+  var s=String(v==null?'':v).trim(),m=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);if(m)return keyOf(new Date(+m[1],+m[2]-1,+m[3]));
+  m=s.match(/(\d{1,2})[\/\-.](\d{1,2})(?:[\/\-.](\d{2,4}))?/);if(!m)return null;
+  var y=m[3]?(+m[3]<100?2000+(+m[3]):+m[3]):yr,mo=+m[2],d2=+m[1];if(!(mo>=1&&mo<=12&&d2>=1&&d2<=31))return null;return keyOf(new Date(y,mo-1,d2));
+}
+function ltRow(out,st,dates,get){
+  var rec={st:st,cells:{}};
+  dates.forEach(function(dk,i){var g=get(i);rec.cells[dk]=ltCell(st,dk,g[0],g[1]);});
+  dates.forEach(function(dk){var x=rec.cells[dk];if(x.err)out.errs++;if(x.warn.length)out.warns++;if(x.c&&x.c.s&&x.c.s!=='O')out.cells++;});
+  out.recs.push(rec);
+}
 function ltParse(rows){
-  var hdr=-1,m={code:-1,name:-1,ca:[],ps:[]};
+  /* (a) file mẫu của web */
+  var hdr=-1,m=null;
   for(var i=0;i<Math.min(10,rows.length)&&hdr<0;i++){var r=rows[i]||[],ca=[],ps=[],code=-1,name=-1;
     r.forEach(function(v,j){var t=String(v||''),n=norm(t),pr=t.split(/\s*·\s*/),dd=dayOfHeader(pr[0]);
       if(/^(ma nv|ma nhan vien|msnv)$/.test(n))code=j;else if(/^(ho ten|ho va ten|ten nhan vien)$/.test(n))name=j;
       else if(dd>=0&&pr.length>1){var nn=norm(pr[1]);if(/^ca$/.test(nn))ca[dd]=j;else if(/^vi tri$/.test(nn))ps[dd]=j;}});
-    var nd=ca.filter(function(x){return x!=null;}).length;if(nd>=5&&(code>=0||name>=0)){hdr=i;m={code:code,name:name,ca:ca,ps:ps};}}
-  if(hdr<0)return null;
-  var wk=findWeekTop(rows)||view.week,out={week:wk,recs:[],miss:[],errs:0,warns:0,cells:0};
-  for(var r=hdr+1;r<rows.length;r++){
-    var row=rows[r]||[],code=String(cellOf(row,m.code)||'').trim(),name=String(cellOf(row,m.name)||'').trim();
-    if(!code&&!name)continue;if(/^(doi soat|ca |thu ngan|tong)/.test(norm(code+' '+name))&&!staffByCode(code)&&!staffByName(name))break; /* hết bảng lịch */
-    var st=staffByCode(code)||staffByName(name);
-    if(!st){if(code||name)out.miss.push(name||code);continue;}
-    var rec={st:st,days:[]};
-    for(var d=0;d<7;d++)rec.days.push(ltCell(st,wk,d,String(cellOf(row,m.ca[d])||'').trim(),String(cellOf(row,m.ps[d])||'').trim()));
-    rec.days.forEach(function(x){if(x.err)out.errs++;if(x.warn.length)out.warns++;if(x.c&&x.c.s&&x.c.s!=='O')out.cells++;});
-    out.recs.push(rec);
+    if(ca.filter(function(x){return x!=null;}).length>=5&&(code>=0||name>=0)){hdr=i;m={code:code,name:name,ca:ca,ps:ps};}}
+  if(hdr>=0){
+    var wk=findWeekTop(rows)||view.week,dates=[0,1,2,3,4,5,6].map(function(d){return addDays(wk,d);}),out={kind:'tpl',dates:dates,recs:[],miss:[],errs:0,warns:0,cells:0};
+    for(var r1=hdr+1;r1<rows.length;r1++){
+      var row=rows[r1]||[],code=String(cellOf(row,m.code)||'').trim(),name=String(cellOf(row,m.name)||'').trim();
+      if(!code&&!name)continue;if(/^(doi soat|ca |thu ngan|tong)/.test(norm(code+' '+name))&&!staffByCode(code)&&!staffByName(name))break;
+      var st=staffByCode(code)||staffByName(name);if(!st){out.miss.push(name||code);continue;}
+      ltRow(out,st,dates,function(d){return [String(cellOf(row,m.ca[d])||'').trim(),String(cellOf(row,m.ps[d])||'').trim()];});
+    }
+    return ltAutoPos(out);
   }
-  return out;
+  /* (b) file phân ca MISA: dòng tiêu đề có Mã nhân viên và từ 3 cột ngày */
+  var yr=new Date().getFullYear();
+  for(var t=0;t<Math.min(8,rows.length);t++)(rows[t]||[]).forEach(function(v){var x=String(v||'').match(/(20\d\d)/);if(x)yr=+x[1];});
+  for(var i2=0;i2<Math.min(15,rows.length);i2++){
+    var r2=rows[i2]||[],c2=-1,n2=-1,dc=[];
+    r2.forEach(function(v,j){var n=norm(v);if(c2<0&&/^(ma nv|ma nhan vien|msnv|ma so nhan vien)/.test(n))c2=j;else if(n2<0&&/^(ho va ten|ho ten|ten nhan vien|nhan vien)$/.test(n))n2=j;else{var dk=ltHdrDate(v,yr);if(dk)dc.push({j:j,dk:dk});}});
+    if(c2<0&&n2<0||dc.length<3)continue;
+    dc.sort(function(a,b){return a.dk<b.dk?-1:1;});
+    if(countDays(dc[0].dk,dc[dc.length-1].dk)>62)return {tooLong:true};
+    var out2={kind:'misa',dates:dc.map(function(x){return x.dk;}),recs:[],miss:[],errs:0,warns:0,cells:0};
+    for(var r3=i2+1;r3<rows.length;r3++){
+      var row2=rows[r3]||[],cd=String(cellOf(row2,c2)||'').trim(),nm=String(cellOf(row2,n2)||'').trim();if(!cd&&!nm)continue;
+      var st2=staffByCode(cd)||staffByName(nm);if(!st2){out2.miss.push(nm||cd);continue;}
+      ltRow(out2,st2,out2.dates,function(i){return [String(cellOf(row2,dc[i].j)||'').replace(/\[[^\]]*\]/g,'').trim(),''];});
+    }
+    return ltAutoPos(out2);
+  }
+  return null;
 }
-/* 1 ô: trả về {c: ô lịch sẽ ghi (null = trống), keep: giữ ô web (nghỉ phép / đổi ca), err, warn:[], txt} */
-function ltCell(st,k,d,ca,pt){
-  var o={c:null,keep:false,err:'',warn:[],txt:ca,pt:pt},n=norm(ca),cur=getCell(k,st.id,d),lv=leaveOn(st.id,k,d);
+/* 1 ô: {c: ô lịch sẽ ghi (null = trống), keep: giữ ô web (nghỉ phép / đổi ca), auto: vị trí do web tự gán, err, warn:[], txt} */
+function ltCell(st,dk,ca,pt){
+  var k=mondayOf(parseKey(dk)),d=dow(dk);
+  var o={c:null,keep:false,auto:false,err:'',warn:[],txt:ca,pt:pt},n=norm(ca),cur=getCell(k,st.id,d),lv=leaveOn(st.id,k,d);
+  if(st.quitDate&&dk>st.quitDate){if(n)o.warn.push('đã nghỉ việc từ '+dlabel(st.quitDate)+', bỏ qua');o.keep=true;return o;}
   if(cur&&(cur.lv||cur.sw)){o.keep=true;if(n&&ltCaText(st,k,d)!==ca&&!/^nghi phep$/.test(n))o.warn.push(cur.sw?'ô đổi ca trên web, giữ nguyên':'nghỉ phép trên web, giữ nguyên');return o;}
   if(!n)return o;
-  if(/^nghi phep$/.test(n)){if(lv==='F'){o.keep=true;return o;}o.c={s:'O'};o.warn.push('chưa có đơn nghỉ phép trên web: ghi là Nghỉ, tạo đơn ở tab Nghỉ phép');return o;}
-  if(/^(nghi|off|o)$/.test(n)){o.c={s:'O'};return o;}
+  if(/^nghi phep$/.test(n)||(S.misa.leave&&n===norm(S.misa.leave))){if(lv==='F'){o.keep=true;return o;}o.c={s:'O'};o.warn.push('chưa có đơn nghỉ phép trên web: ghi là Nghỉ, tạo đơn ở tab Nghỉ phép');return o;}
+  if(/^(nghi|off|o)$/.test(n)||(S.misa.off&&n===norm(S.misa.off))){o.c={s:'O'};return o;}
   var v=parseRegVal(ca);if(!v){o.err='không đọc được ca "'+ca+'"';return o;}
   var ids=v==='A'?atomIds():expandIds(v.split(',')),s=comboOf(ids);
   for(var i=0;i<ids.length;i++)for(var j=i+1;j<ids.length;j++)if(overlapIds([ids[i]],ids[j])){o.err='các ca trùng giờ nhau';return o;}
   if(lv==='F'){o.err='trùng ngày nghỉ phép đã duyệt';return o;}
   if(blocks(lv,s))o.warn.push('trùng ca nghỉ phép');
-  /* vị trí: 1 vị trí cho cả ngày, hoặc theo thứ tự ca nối bằng + */
   var U=units(ids),parts=pt?pt.split(/\s*\+\s*/).filter(Boolean):[],P=[];
-  if(!parts.length){var mp=st.skills.filter(function(x){return pos(x);})[0];if(!mp){o.err='chưa ghi vị trí và người này chưa đào tạo vị trí nào';return o;}P=[mp];o.warn.push('chưa ghi vị trí: dùng vị trí chính '+pos(mp).name);}
-  else for(var q=0;q<parts.length;q++){var p=ltFindPos(parts[q]);if(!p){o.err='không có vị trí "'+parts[q]+'"';return o;}P.push(p.id);}
-  if(P.length>1&&P.length!==U.length){o.err='ghi '+P.length+' vị trí cho '+U.length+' ca';return o;}
-  var ps={},p0=P[0];if(P.length>1)U.forEach(function(u,ui){(isComp(u.id)?compParts(u.id):[u.id]).forEach(function(id){if(P[ui]!==p0)ps[id]=P[ui];});});
-  if(!holdSeqOk(U.map(function(u,ui){return {t:shiftSpan(u),p:P.length>1?P[ui]:P[0]};})))o.warn.push(holdIds().filter(function(x){return P.indexOf(x)>=0;}).map(function(x){return pos(x).name;}).join(', ')+' bị tách thành nhiều khúc trong ngày (bàn giao nhiều lần)');
-  P.forEach(function(x){if(st.skills.indexOf(x)<0)o.warn.push('chưa đào tạo vị trí '+pos(x).name);});
-  o.c={s:s,p:p0};if(Object.keys(ps).length)o.c.ps=ps;
+  if(!parts.length){
+    if(!st.skills.some(function(x){return pos(x);})){o.err='người này chưa đào tạo vị trí nào (Thiết lập nhân viên)';return o;}
+    o.c={s:s,p:null};o.auto=true;
+  }else{
+    for(var q=0;q<parts.length;q++){var p=ltFindPos(parts[q]);if(!p){o.err='không có vị trí "'+parts[q]+'"';return o;}P.push(p.id);}
+    if(P.length>1&&P.length!==U.length){o.err='ghi '+P.length+' vị trí cho '+U.length+' ca';return o;}
+    var ps={},p0=P[0];if(P.length>1)U.forEach(function(u,ui){(isComp(u.id)?compParts(u.id):[u.id]).forEach(function(id){if(P[ui]!==p0)ps[id]=P[ui];});});
+    if(!holdSeqOk(U.map(function(u,ui){return {t:shiftSpan(u),p:P.length>1?P[ui]:P[0]};})))o.warn.push(holdIds().filter(function(x){return P.indexOf(x)>=0;}).map(function(x){return pos(x).name;}).join(', ')+' bị tách thành nhiều khúc trong ngày (bàn giao nhiều lần)');
+    P.forEach(function(x){if(st.skills.indexOf(x)<0)o.warn.push('chưa đào tạo vị trí '+pos(x).name);});
+    o.c={s:s,p:p0};if(Object.keys(ps).length)o.c.ps=ps;
+  }
   if(!availOk(avail(st,k,d),s)){o.c.call=1;o.warn.push('ngoài đăng ký ('+(regShort(avail(st,k,d))||'không đăng ký')+')');}
   else if(!splitOk(st,k,d,ids))o.warn.push('ca gãy không có trong đăng ký');
   return o;
+}
+/* tự gán vị trí cho ô không ghi vị trí: từng ngày, đếm có/cần (người không có trong file giữ ô web), người ít vị trí đã đào tạo xếp trước,
+   mỗi người 1 vị trí cả ngày: vị trí đã đào tạo còn thiếu nhiều nhất trong các ca người đó làm; không thiếu thì vị trí ưu tiên 1 */
+function ltAutoPos(R){
+  var inFile={};R.recs.forEach(function(rec){inFile[rec.st.id]=rec;});
+  R.dates.forEach(function(dk){
+    var k=mondayOf(parseKey(dk)),d=dow(dk),cov={};
+    var add=function(c){shiftsOf(c.s).forEach(function(id){var p=posOf(c,id);if(!p)return;var key=id+'|'+p;cov[key]=(cov[key]||0)+1;});};
+    S.staff.forEach(function(st){var rec=inFile[st.id],x=rec&&rec.cells[dk];if(x&&!x.keep){if(x.c&&x.c.s&&x.c.s!=='O'&&!x.auto)add(x.c);return;}var c=getCell(k,st.id,d);if(c&&c.s&&c.s!=='O')add(c);});
+    R.recs.map(function(rec){return rec;}).filter(function(rec){var x=rec.cells[dk];return x&&x.auto&&x.c;})
+      .sort(function(a,b){return a.st.skills.length-b.st.skills.length;})
+      .forEach(function(rec){var x=rec.cells[dk],ids=shiftsOf(x.c.s),best=null,bg=0;
+        rec.st.skills.forEach(function(pid){if(!pos(pid))return;var g=0;ids.forEach(function(id){g+=Math.max(0,needF(d,id,pid)-(cov[id+'|'+pid]||0));});if(g>bg){bg=g;best=pid;}});
+        x.c.p=best||rec.st.skills.filter(function(pid){return pos(pid);})[0];add(x.c);});
+  });
+  return R;
 }
 function readLtFile(file){
   if(!file)return;toast('Đang đọc file…');
   var fr=new FileReader();
   fr.onload=function(){
     loadXLSX().then(function(X){
-      var wb;try{wb=X.read(new Uint8Array(fr.result),{type:'array',cellDates:false});}catch(e){toast('Không đọc được file này. Kiểm tra file đúng định dạng .xlsx và không đặt mật khẩu.',8000);return;}
-      var res=null;wb.SheetNames.forEach(function(nm){if(res||/^_/.test(nm))return;res=ltParse(X.utils.sheet_to_json(wb.Sheets[nm],{header:1,raw:true,defval:''}));});
-      if(!res){toast('Không thấy bảng lịch trong file. Dùng file tải từ nút "Tải file lịch mẫu" (mỗi ngày 2 cột Ca · Vị trí).',9000);return;}
+      var wb;try{wb=X.read(new Uint8Array(fr.result),{type:'array',cellDates:true});}catch(e){toast('Không đọc được file này. Kiểm tra file đúng định dạng .xlsx và không đặt mật khẩu.',8000);return;}
+      var res=null;wb.SheetNames.forEach(function(nm){if(res||/^_|^vi_du|^huong dan|^ma ca$|^danh sach$/.test(norm(nm)))return;res=ltParse(X.utils.sheet_to_json(wb.Sheets[nm],{header:1,raw:true,defval:''}));});
+      if(res&&res.tooLong){toast('File dài quá 62 ngày. Tách file theo tháng rồi nhập từng file.',9000);return;}
+      if(!res){toast('Không thấy bảng lịch trong file. Dùng file lịch mẫu của web, hoặc file phân ca MISA (cột Mã nhân viên, Họ và tên, mỗi ngày 1 cột).',10000);return;}
       LT.res=res;LT.name=file.name;LT.step='prev';
-      if(res.week!==view.week){view.week=res.week;render();}
+      var wk=mondayOf(parseKey(res.dates[0]));if(wk!==view.week){view.week=wk;render();}
       renderLt();
     },function(){toast('Không tải được bộ đọc Excel. Kiểm tra kết nối mạng rồi thử lại.',8000);});
   };
   fr.readAsArrayBuffer(file);
 }
 function applyLt(){
-  var R=LT.res,k=R.week,n=0;
-  R.recs.forEach(function(rec){for(var d=0;d<7;d++){var x=rec.days[d];if(x.keep||x.err)continue;var cur=getCell(k,rec.st.id,d);if(cur&&(cur.lv||cur.sw))continue;setCell(k,rec.st.id,d,x.c?clone(x.c):null);if(x.c&&x.c.s!=='O')n++;}});
+  var R=LT.res,n=0;
+  R.recs.forEach(function(rec){R.dates.forEach(function(dk){var x=rec.cells[dk];if(!x||x.keep||x.err)return;var k=mondayOf(parseKey(dk)),d=dow(dk),cur=getCell(k,rec.st.id,d);if(cur&&(cur.lv||cur.sw))return;
+    setCell(k,rec.st.id,d,x.c?clone(x.c):null);if(x.c&&x.c.s!=='O')n++;});});
   markDirty();LT.step='done';LT.applied=n;render();renderLt();
 }
+function ltRange(R){var a=R.dates[0],b=R.dates[R.dates.length-1];return dm(a)+' – '+dm(b)+'/'+b.slice(0,4);}
 
 /* ---------- hộp thoại ---------- */
 function openLt(){LT={step:'start'};renderLt();}
 function closeLt(){LT=null;var m=document.getElementById('ltmodal');if(m)m.remove();}
 function renderLt(){
   if(!LT)return;var k=view.week,m=document.getElementById('ltmodal');
-  if(!m){m=document.createElement('div');m.id='ltmodal';m.className='modal';document.body.appendChild(m);m.addEventListener('click',ltClick);m.addEventListener('change',function(e){if(e.target.id==='lt-file'){readLtFile(e.target.files&&e.target.files[0]);e.target.value='';}});}
-  var h='<div class="modal-card ltcard" role="dialog" aria-modal="true" aria-labelledby="lth"><div class="pop-h"><div><h3 id="lth">Nhập lịch tự xếp</h3><span>Xếp lịch trong Excel rồi đưa vào web. Áp dụng xong xuất file MISA được ngay.</span></div><button class="x" data-lt="close" aria-label="Đóng">×</button></div>';
+  if(!m){m=document.createElement('div');m.id='ltmodal';m.className='modal';document.body.appendChild(m);m.addEventListener('click',ltClick);m.addEventListener('change',function(e){if(e.target.id==='lt-file'||e.target.id==='lt-file2'){readLtFile(e.target.files&&e.target.files[0]);e.target.value='';}});}
+  var h='<div class="modal-card ltcard" role="dialog" aria-modal="true" aria-labelledby="lth"><div class="pop-h"><div><h3 id="lth">Nhập lịch từ Excel / MISA</h3><span>Lịch tự xếp trong Excel, hoặc lịch cũ xuất từ MISA (chỉ có mã ca) để tính công, lương. Áp dụng xong xuất file MISA được ngay.</span></div><button class="x" data-lt="close" aria-label="Đóng">×</button></div>';
   if(LT.step==='start'){
-    h+='<ol class="ltsteps"><li><b>Tải file lịch mẫu tuần '+isoWeek(k)+'</b><span>Bảng giống "Theo nhân viên": mỗi người một dòng, mỗi ngày 2 cột Ca · Vị trí, có sẵn lịch đang có, danh sách chọn và bảng đối soát định biên tự tính.</span><button class="btn" data-lt="tpl">Tải file lịch mẫu</button></li>'
-      +'<li><b>Xếp lịch trong file, lưu lại</b><span>Chọn ca, vị trí cho từng người. Ô đỏ ở bảng đối soát là vị trí còn thiếu người.</span></li>'
-      +'<li><b>Chọn file đã xếp</b><span>Web đọc từng ô, báo ô lỗi trước khi lưu. Chưa có gì thay đổi cho tới khi bấm Áp dụng.</span><label class="btn primary filebtn">Chọn file đã xếp<input type="file" id="lt-file" accept=".xlsx,.xls" hidden></label></li></ol>';
+    h+='<div class="ltpick"><div class="ltopt"><b>Có file phân ca xuất từ MISA</b><span>File chỉ có Mã nhân viên, Họ tên và mã ca từng ngày (một tuần, cả tháng, tối đa 62 ngày). Web đọc mã ca MISA và <b>tự gán vị trí</b> theo vị trí đã đào tạo, ưu tiên chỗ đang thiếu.</span><label class="btn primary filebtn">Chọn file MISA<input type="file" id="lt-file" accept=".xlsx,.xls" hidden></label></div></div>'
+      +'<p class="ltor">hoặc tự xếp trong file mẫu của web</p>'
+      +'<ol class="ltsteps"><li><b>Tải file lịch mẫu tuần '+isoWeek(k)+'</b><span>Mỗi người một dòng, mỗi ngày 2 cột Ca · Vị trí, có sẵn lịch đang có và bảng đối soát định biên. Cột Vị trí <b>không bắt buộc</b>: để trống thì web tự gán.</span><button class="btn" data-lt="tpl">Tải file lịch mẫu</button></li>'
+      +'<li><b>Xếp lịch trong file, lưu lại</b><span>Chọn ca cho từng người; vị trí ghi nếu muốn chỉ định.</span></li>'
+      +'<li><b>Chọn file đã xếp</b><span>Web đọc từng ô, báo ô lỗi trước khi lưu. Chưa có gì thay đổi cho tới khi bấm Áp dụng.</span><label class="btn filebtn">Chọn file đã xếp<input type="file" id="lt-file2" accept=".xlsx,.xls" hidden></label></li></ol>';
   }else if(LT.step==='prev'){
-    var R=LT.res,bad=R.recs.filter(function(r){return r.days.some(function(x){return x.err||x.warn.length;});});
-    h+='<div class="ltsum"><span><b>'+esc(LT.name)+'</b> · tuần '+isoWeek(R.week)+' ('+dm(R.week)+' – '+dm(addDays(R.week,6))+')</span><span class="pill ok">'+R.recs.length+' người · '+R.cells+' ngày làm</span>'+(R.errs?'<span class="pill no">'+R.errs+' ô lỗi, sẽ bỏ qua</span>':'')+(R.warns?'<span class="pill wait">'+R.warns+' ô cần xem</span>':'')+(R.miss.length?'<span class="pill no">'+R.miss.length+' dòng không khớp nhân viên</span>':'')+'</div>';
+    var R=LT.res,bad=R.recs.filter(function(r){return R.dates.some(function(dk){var x=r.cells[dk];return x&&(x.err||x.warn.length);});}),na=0;
+    R.recs.forEach(function(r){R.dates.forEach(function(dk){var x=r.cells[dk];if(x&&x.auto&&x.c)na++;});});
+    h+='<div class="ltsum"><span><b>'+esc(LT.name)+'</b> · '+(R.kind==='misa'?'file MISA':'file mẫu')+' · '+R.dates.length+' ngày ('+ltRange(R)+')</span><span class="pill ok">'+R.recs.length+' người · '+R.cells+' ngày làm</span>'+(na?'<span class="pill">'+na+' ô web tự gán vị trí</span>':'')+(R.errs?'<span class="pill no">'+R.errs+' ô lỗi, sẽ bỏ qua</span>':'')+(R.warns?'<span class="pill wait">'+R.warns+' ô cần xem</span>':'')+(R.miss.length?'<span class="pill no">'+R.miss.length+' dòng không khớp nhân viên</span>':'')+'</div>';
     if(R.miss.length)h+='<p class="sm"><b>Không khớp nhân viên (bỏ qua):</b> '+esc(R.miss.slice(0,8).join(', '))+(R.miss.length>8?'…':'')+'. Kiểm tra Mã NV trùng với tab Thiết lập nhân viên.</p>';
-    h+='<div class="tblwrap ltprev"><table class="tbl"><thead><tr><th>Nhân viên</th>'+DAYS.map(function(x,i){return '<th>'+x+' <small>'+dm(addDays(R.week,i))+'</small></th>';}).join('')+'</tr></thead><tbody>'
-      +R.recs.map(function(rec){return '<tr><th><b>'+esc(rec.st.name)+'</b><small>'+esc(rec.st.code||'')+'</small></th>'+rec.days.map(function(x){
+    h+='<div class="tblwrap ltprev"><table class="tbl"><thead><tr><th>Nhân viên</th>'+R.dates.map(function(dk){return '<th>'+DAYS[dow(dk)]+' <small>'+dm(dk)+'</small></th>';}).join('')+'</tr></thead><tbody>'
+      +R.recs.map(function(rec){return '<tr><th><b>'+esc(rec.st.name)+'</b><small>'+esc(rec.st.code||'')+'</small></th>'+R.dates.map(function(dk){var x=rec.cells[dk];
         var c=x.c,p=c&&c.s&&c.s!=='O'?pos(c.p):null,cls=x.err?'err':x.warn.length?'warn':'',body;
         if(x.keep)body='<span class="muted">giữ ô web</span>';else if(x.err)body='<b>'+esc(x.txt||'')+'</b>';else if(!c)body='<span class="muted">–</span>';else if(c.s==='O')body='<span class="muted">Nghỉ</span>';
-        else body='<b>'+esc(shiftLabel(c.s))+'</b>'+(p?'<span class="chip pc'+p.c+'">'+esc(ltPosText(c))+'</span>':'');
+        else body='<b>'+esc(shiftLabel(c.s))+'</b>'+(p?'<span class="chip pc'+p.c+(x.auto?' auto':'')+'"'+(x.auto?' title="Web tự gán vị trí"':'')+'>'+esc(ltPosText(c))+'</span>':'');
         return '<td class="'+cls+'"'+(x.err||x.warn.length?' title="'+esc([x.err].concat(x.warn).filter(Boolean).join('; '))+'"':'')+'>'+body+(x.err?'<small class="e">'+esc(x.err)+'</small>':x.warn.length?'<small>'+esc(x.warn.join('; '))+'</small>':'')+'</td>';}).join('')+'</tr>';}).join('')+'</tbody></table></div>';
-    if(bad.length)h+='<p class="sm muted">Ô đỏ: lỗi, bỏ qua (giữ nguyên ô trên web). Ô vàng: vẫn nhận, ghi chú để CHT xem lại. Sửa file rồi chọn lại nếu cần.</p>';
-    h+='<div class="row end"><button class="btn ghost" data-lt="back">Chọn file khác</button><button class="btn primary" data-lt="apply"'+(R.recs.length?'':' disabled')+'>Áp dụng vào tuần '+isoWeek(R.week)+'</button></div>';
+    h+='<p class="sm muted">'+(na?'Vị trí viền gạch là web tự gán (vị trí đã đào tạo, ưu tiên chỗ đang thiếu); sửa lại trên lịch sau khi áp dụng nếu cần. ':'')+(bad.length?'Ô đỏ: lỗi, bỏ qua (giữ nguyên ô trên web). Ô vàng: vẫn nhận, ghi chú để xem lại.':'')+'</p>';
+    h+='<div class="row end"><button class="btn ghost" data-lt="back">Chọn file khác</button><button class="btn primary" data-lt="apply"'+(R.recs.length?'':' disabled')+'>Áp dụng '+R.dates.length+' ngày ('+ltRange(R)+')</button></div>';
   }else{
-    h+='<div class="ltdone"><b>Đã áp dụng lịch của '+LT.res.recs.length+' người ('+LT.applied+' ngày làm) vào tuần '+isoWeek(LT.res.week)+'.</b><span>Lịch đã lưu như xếp trên web: xem ở bảng Theo vị trí, sửa tay nếu cần. Bấm Xuất file MISA để tải file phân ca nhập lên MISA chấm công.</span></div>'
-      +'<div class="row end"><button class="btn ghost" data-lt="close">Xem lịch</button><button class="btn primary" data-lt="misa">Xuất file MISA tuần '+isoWeek(LT.res.week)+'</button></div>';
+    var R2=LT.res;
+    h+='<div class="ltdone"><b>Đã áp dụng lịch của '+R2.recs.length+' người ('+LT.applied+' ngày làm), '+ltRange(R2)+'.</b><span>Lịch đã lưu như xếp trên web: xem ở Lịch tuần, giờ công và lương ở Công &amp; giờ công. Bấm Xuất file MISA để tải file phân ca của khoảng ngày này.</span></div>'
+      +'<div class="row end"><button class="btn ghost" data-lt="close">Xem lịch</button><button class="btn" data-lt="pay">Xem công &amp; giờ công</button><button class="btn primary" data-lt="misa">Xuất file MISA '+ltRange(R2)+'</button></div>';
   }
   m.innerHTML=h+'</div>';
 }
@@ -6548,7 +6618,8 @@ function ltClick(e){
   else if(a==='tpl')exportLtFile(view.week);
   else if(a==='back'){LT.step='start';renderLt();}
   else if(a==='apply'){if(!canEdit()){toast('Tài khoản này chỉ xem.');return;}applyLt();}
-  else if(a==='misa'){var wk=LT.res.week;closeLt();exportMisa(wk,addDays(wk,6));}
+  else if(a==='misa'){var R=LT.res;closeLt();exportMisa(R.dates[0],R.dates[R.dates.length-1]);}
+  else if(a==='pay'){var R3=LT.res;closeLt();view.pay={from:R3.dates[0],to:R3.dates[R3.dates.length-1]};view.tab='pay';render();}
 }
 $app.addEventListener('click',function(e){var b=e.target.closest('[data-act="ltopen"]');if(!b||view.mod!=='xc')return;if(!canEdit()){toast('Tài khoản này chỉ xem.');return;}openLt();});
 
