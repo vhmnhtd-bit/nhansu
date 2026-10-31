@@ -1208,6 +1208,8 @@ h1{letter-spacing:-.015em}h2,h3{letter-spacing:-.005em}
 
 /* lương FT theo site (31/10) */
 .ftcfg{display:flex;flex-wrap:wrap;gap:10px;margin:8px 0 4px}.ftcfg .fl{min-width:170px;flex:0 1 auto}
+.holtbl td{vertical-align:top}.holtbl .in{min-width:0}.holtbl input[type=date]{width:150px}.holtbl .nowrap{flex-wrap:nowrap;gap:4px}.holsites summary{cursor:pointer;color:var(--accent,#2b50d6)}.holsites .chk{display:flex;gap:6px;align-items:center;font-size:13px;padding:2px 0}
+[data-holy]{min-width:96px}
 </style>
 </head>
 <body>
@@ -1280,7 +1282,7 @@ body{margin:0}
 @media (max-width:600px){.ab-in{padding:6px 16px}.ab-brand small,.ab-chip span{display:none}.ab-chip{padding:3px}.ab-chip svg{display:none}}
 </style>
 <div id="xc-login" class="xc-login" hidden></div>
-<script id="xc-shim">window.XC_BUILD='2026-10-31 15:55';
+<script id="xc-shim">window.XC_BUILD='2026-10-31 16:26';
 (function(){
 'use strict';
 var TOKEN_KEY='xc_token';
@@ -2573,7 +2575,7 @@ function renderPay(){
       +'<td class="n" data-money="'+x.st.id+'">'+fmtVND(x.hours*(x.st.rate||0))+'</td>'+(hl.length?(function(){var le=ptLe(x);return '<td class="n">'+(le.h?fmtH(le.h):'—')+'</td><td class="n">'+(le.v?fmtVND(le.v):'—')+'</td>';})():'')+'</tr>';
   });
   h+='</tbody><tfoot><tr><td colspan="'+(3+S.shifts.length)+'">Tổng</td><td class="n">'+fmtH(th)+'</td><td></td><td class="n" data-moneytotal>'+fmtVND(tm)+'</td>'+(hl.length?'<td></td><td class="n">'+fmtVND(tle)+'</td>':'')+'</tr></tfoot></table></div>';
-  if(hl.length)h+='<p class="sm muted">Ngày lễ trong kỳ: '+hl.map(function(dk){return dm(dk)+' '+esc(holName(dk));}).join(', ')+'. PT làm ngày lễ được trả '+Math.round(holK()*100)+'%: thêm '+Math.round((holK()-1)*100)+'% đơn giá cho mỗi giờ làm ngày lễ.</p>';
+  if(hl.length)h+='<p class="sm muted">Ngày lễ trong kỳ: '+esc(holTxt(hl))+'. PT làm ngày lễ được trả theo hệ số của ngày đó (300% là thêm 200% đơn giá mỗi giờ).</p>';
   h+=ftPanel(r,p.from,p.to);
   h+='<div class="row"><button class="btn primary" data-act="payxlsx">Tải file Excel</button><button class="btn" data-act="misaxlsx">Tải file phân ca MISA</button><button class="btn" data-act="paycopy">Sao chép bảng PT</button><button class="btn" data-act="payft">Sao chép bảng FT</button><button class="btn" data-act="paydetail">Sao chép chi tiết PT theo ngày</button></div></section>';
   return h;
@@ -2959,12 +2961,12 @@ function exportPay(){
     if(hl.length){[['Giờ lễ',9],['Thêm ngày lễ (đ)',16],['Tổng (đ)',15]].forEach(function(c,j){var hc=pt.getCell(1,cM+1+j);hc.value=c[0];hc.font=pt.getCell(1,cM).font;hc.fill=pt.getCell(1,cM).fill;hc.alignment=pt.getCell(1,cM).alignment;pt.getColumn(cM+1+j).width=c[1];});
       r.pt.forEach(function(x,i){var le=ptLe(x),row=i+2;pt.getCell(row,cM+1).value=le.h;var lv=pt.getCell(row,cM+2);lv.value=le.v;lv.numFmt='#,##0';var tv=pt.getCell(row,cM+3);tv.value={formula:colL(cM)+row+'+'+colL(cM+2)+row,result:Math.round(x.hours*(x.st.rate||0))+le.v};tv.numFmt='#,##0';});
       [cM+1,cM+2,cM+3].forEach(function(c){var sc=pt.getCell(t,c);sc.value={formula:'SUM('+colL(c)+'2:'+colL(c)+last+')'};xBold(sc,c>cM+1?'#,##0':null);});
-      pt.getCell(t+3,1).value='Ngày lễ: '+hl.map(function(dk){return dm(dk)+' '+holName(dk);}).join(', ')+'. Làm ngày lễ trả '+Math.round(holK()*100)+'%: thêm '+Math.round((holK()-1)*100)+'% đơn giá mỗi giờ.';pt.getCell(t+3,1).font={name:'Arial',italic:true,color:{argb:XGREY}};}
+      pt.getCell(t+3,1).value='Ngày lễ: '+holTxt(hl)+'. PT làm ngày lễ trả theo hệ số của ngày đó (300% là thêm 200% đơn giá mỗi giờ).';pt.getCell(t+3,1).font={name:'Arial',italic:true,color:{argb:XGREY}};}
     var FA=ftAoa2(r.ft,p.from,p.to),W=[14,24,9,8,12,10,14,15,10,14,10,14,15];
     xHeader(ft,FA[0].map(function(t0,j){return [t0,W[j]];}));
     FA.slice(1).forEach(function(a,i){a.forEach(function(v,j){var c=ft.getCell(i+2,j+1);c.value=v;if(j>=6&&[6,7,9,11,12].indexOf(j)>=0)c.numFmt='#,##0';});xFill(ft.getCell(i+2,7),XINPUT);});
     var ft2=FA.length+1;xSumRow(ft,ft2,'Tổng');[3,4,5,8,9,10,11,12,13].forEach(function(c){var sc=ft.getCell(ft2,c);sc.value={formula:'SUM('+colL(c)+'2:'+colL(c)+Math.max(2,ft2-1)+')'};xBold(sc,[8,10,12,13].indexOf(c)>=0?'#,##0':null);});
-    ft.getCell(ft2+2,1).value='Cách tính của site: '+ftRule()+'. Lương theo công = lương tháng ÷ công chuẩn × công (tối đa lương tháng). Ngày lễ không đi làm vẫn tính công; làm ngày lễ thêm '+Math.round(holK()*100)+'% lương ngày. Nhân viên site không có phép năm.';ft.getCell(ft2+2,1).font={name:'Arial',italic:true,color:{argb:XGREY}};
+    ft.getCell(ft2+2,1).value='Cách tính của site: '+ftRule()+'. Lương theo công = lương tháng ÷ công chuẩn × công (tối đa lương tháng). Ngày lễ không đi làm vẫn tính công; làm ngày lễ thêm hệ số của ngày đó × lương ngày. Nhân viên site không có phép năm.';ft.getCell(ft2+2,1).font={name:'Arial',italic:true,color:{argb:XGREY}};
     return wb;
   },name);
 }
@@ -7203,14 +7205,22 @@ $app.addEventListener('change',function(e){
    Ngày lễ (cfg/holidays: {d:{'YYYY-MM-DD':tên}, k:hệ số}, quản lý chuỗi sửa ở Lương & ngân sách, áp dụng mọi site). Điều 98: làm ngày lễ ít nhất 300%.
      PT: trả thêm giờ lễ × đơn giá × (hệ số − 1), vì 100% đã nằm trong giờ công.
      FT: ngày lễ là ngày nghỉ có lương (Điều 112): không đi làm vẫn tính 1 công; đi làm thì công ngày đó + thêm công × lương ngày × hệ số. */
-var HOL={d:null,k:3,loaded:false,busy:false,edit:null};
-var HOL_DEF={'2026-01-01':'Tết Dương lịch','2026-04-30':'Ngày Chiến thắng','2026-05-01':'Quốc tế Lao động','2026-09-02':'Quốc khánh',
-  '2027-01-01':'Tết Dương lịch','2027-04-30':'Ngày Chiến thắng','2027-05-01':'Quốc tế Lao động','2027-09-02':'Quốc khánh'};
-function holLoad(){if(HOL.loaded||HOL.busy||!DB)return;HOL.busy=true;DB.doc('cfg/holidays').get().then(function(sn){var x=sn.exists?sn.data():{};HOL.d=x.d||null;if(x.k)HOL.k=+x.k;HOL.loaded=true;HOL.busy=false;render();},function(){HOL.loaded=true;HOL.busy=false;});}
-function holDays(){return HOL.d||HOL_DEF;}
-function holName(dk){return holDays()[dk]||'';}
-function holK(){return +HOL.k||3;}
-function holIn(from,to){var L=[];eachDate(from,to,function(dk){if(holName(dk))L.push(dk);});return L;}
+/* ngày lễ (1/11, Phúc): bảng giống danh sách ngày nghỉ trên MISA. Mỗi dòng: tên, từ ngày – đến ngày, hệ số riêng, đối tượng áp dụng
+   (toàn chuỗi hoặc một số site), ghi chú. cfg/holidays = {list:[{id,name,from,to,k,sites:[mã site] ([] = toàn chuỗi),note}]}; bản cũ {d,k} tự chuyển.
+   Mặc định 2026 lấy theo danh sách ngày nghỉ công ty áp dụng cho Phòng vận hành Miền Nam / toàn công ty, hệ số 300%. */
+var HOL={list:null,loaded:false,busy:false,edit:null,y:null};
+var HOL_DEF=[['Tết Dương lịch','2026-01-01','2026-01-01'],['Tết Dương lịch ngày 2','2026-01-02','2026-01-02'],['28 + 29 Tết','2026-02-15','2026-02-16'],['Tết Âm lịch','2026-02-17','2026-02-19'],
+  ['Mùng 4 – Mùng 6 Tết','2026-02-20','2026-02-22'],['Giỗ Tổ Hùng Vương','2026-04-26','2026-04-26'],['Giải phóng miền Nam','2026-04-30','2026-04-30'],['Quốc tế Lao động','2026-05-01','2026-05-01'],
+  ['Nghỉ lễ 31/08','2026-08-31','2026-08-31'],['Quốc khánh','2026-09-01','2026-09-02']].map(function(a,i){return {id:'d'+i,name:a[0],from:a[1],to:a[2],k:3,sites:[],note:''};});
+function holList(){return HOL.list||HOL_DEF;}
+function holLoad(){if(HOL.loaded||HOL.busy||!DB)return;HOL.busy=true;DB.doc('cfg/holidays').get().then(function(sn){var x=sn.exists?sn.data():{};
+  if(x.list)HOL.list=x.list;else if(x.d)HOL.list=Object.keys(x.d).sort().map(function(dk,i){return {id:'m'+i,name:x.d[dk],from:dk,to:dk,k:+x.k||3,sites:[],note:''};});
+  HOL.loaded=true;HOL.busy=false;render();},function(){HOL.loaded=true;HOL.busy=false;});}
+function holOf(dk){var sk=S&&S.siteKey,L=holList();for(var i=0;i<L.length;i++){var h=L[i];if(h.from<=dk&&dk<=(h.to||h.from)&&(!h.sites||!h.sites.length||h.sites.indexOf(sk)>=0))return h;}return null;}
+function holName(dk){var h=holOf(dk);return h?h.name:'';}
+function holKOf(dk){var h=holOf(dk);return h?(+h.k||0):0;}
+function holIn(from,to){var L=[];eachDate(from,to,function(dk){if(holOf(dk))L.push(dk);});return L;}
+function holTxt(L){return L.map(function(dk){return dm(dk)+' '+holName(dk)+' ('+Math.round(holKOf(dk)*100)+'%)';}).join(', ');}
 function ftc(){return (S&&S.ftc)||{};}
 function ftStdOf(ym){var c=ftc();if(c.std==='month'){var y=+ym.slice(0,4),m=+ym.slice(5,7);return new Date(y,m,0).getDate()-(c.off!=null?+c.off:4);}return +S.ftStd||26;}
 function ftDayH(){return +ftc().dayH||8;}
@@ -7224,19 +7234,19 @@ function ftCalc(x,from,to){
   eachDate(from,to,function(dk){
     if((st.start&&dk<st.start)||!employed(st,dk))return;
     var ym=dk.slice(0,7),g=seg[ym]||(seg[ym]={c:0,n:0,le:0}),w=x.dset[dk]?ftCongDay(hd[dk]||0):0;g.n++;if(x.dset[dk])o.work++;
-    if(holName(dk)){if(w){g.le+=w;o.leWork+=w;}else{w=1;o.lePaid++;}}
+    if(holOf(dk)){if(w){g.le+=w*holKOf(dk);o.leWork+=w;}else{w=1;o.lePaid++;}}
     g.c+=w;
   });
   Object.keys(seg).forEach(function(ym){
     var g=seg[ym],R=ymRange(ym),nd=countDays(R.from,R.to),std=ftStdOf(ym),wage=std>0?sal/std:0,full=from<=R.from&&to>=R.to&&g.n===nd;
     o.cong+=g.c;o.std+=full?std:Math.round(std*g.n/nd*10)/10;if(!full)o.partial=true;
     if(full&&g.c>std){o.base+=sal;o.overC+=g.c-std;o.over+=(g.c-std)*wage*ftOverK();}else o.base+=g.c*wage;
-    o.le+=g.le*wage*holK();
+    o.le+=g.le*wage;
   });
   o.base=Math.round(o.base);o.over=Math.round(o.over);o.le=Math.round(o.le);o.cong=Math.round(o.cong*100)/100;o.total=o.base+o.over+o.le;
   return o;
 }
-function ptLe(x){var h=0;x.days.forEach(function(d){if(holName(d.dk))h+=+d.h||0;});return {h:h,v:Math.round(h*(x.st.rate||0)*(holK()-1))};}
+function ptLe(x){var h=0,v=0;x.days.forEach(function(d){var k=holKOf(d.dk);if(k){h+=+d.h||0;v+=(+d.h||0)*(x.st.rate||0)*Math.max(0,k-1);}});return {h:h,v:Math.round(v)};}
 /* tổng lương PT, FT của 1 khoảng (dùng ở Công & giờ công và Lương & ngân sách) */
 function payTotals(r,from,to){var t={pt:0,ptLe:0,ft:0,ftLe:0,ftOver:0,nos:0};
   r.pt.forEach(function(x){t.pt+=x.hours*(x.st.rate||0);t.ptLe+=ptLe(x).v;});
@@ -7253,7 +7263,7 @@ function ftPanel(r,from,to){
     +'<label class="fl">Tính công 1 ngày<select class="in" data-ftc="cong"><option value="day"'+(c.cong!=='hour'?' selected':'')+'>Có ca là 1 công</option><option value="hour"'+(c.cong==='hour'?' selected':'')+'>Theo giờ làm</option></select></label>'
     +(c.cong==='hour'?'<label class="fl">Giờ chuẩn/ngày<input class="in num" inputmode="decimal" data-ftc="dayH" value="'+fmtH(ftDayH())+'"></label>':'')
     +'<label class="fl">Công vượt chuẩn trả<select class="in" data-ftc="over">'+[[0,'0% (nghỉ bù)'],[1,'100%'],[1.5,'150%'],[2,'200% (ngày nghỉ tuần)'],[3,'300%']].map(function(v){return '<option value="'+v[0]+'"'+(ftOverK()===v[0]?' selected':'')+'>'+v[1]+'</option>';}).join('')+'</select></label></div>';
-  if(hl.length)h+='<p class="sm">Ngày lễ trong kỳ: <b>'+hl.map(function(dk){return dm(dk)+' '+esc(holName(dk));}).join(', ')+'</b> · làm ngày lễ trả '+Math.round(holK()*100)+'%.</p>';
+  if(hl.length)h+='<p class="sm">Ngày lễ trong kỳ: <b>'+esc(holTxt(hl))+'</b>.</p>';
   h+='</div><div class="tblwrap"><table class="tbl"><thead><tr><th>Mã NV</th><th>Họ tên</th><th class="n">Ngày làm</th><th class="n">Công</th><th class="n">Công chuẩn</th><th class="n">Lương tháng</th><th class="n">Lương theo công</th><th class="n">Vượt chuẩn</th><th class="n">Làm ngày lễ</th><th class="n">Tổng (đ)</th></tr></thead><tbody>';
   if(!r.ft.length)h+='<tr><td colspan="10" class="emptyrow">Không có nhân viên FT.</td></tr>';
   var T={base:0,over:0,le:0,total:0},part=false;
@@ -7288,7 +7298,7 @@ function payYm(from,to){if(!from||!to||from.slice(8)!=='01'||from.slice(0,7)!==t
 function payLockOf(ym){return (ym&&S&&S.payLock&&S.payLock[ym])||null;}
 function paySnap(ym){
   var R=ymRange(ym),r=payroll(R.from,R.to),T=payTotals(r,R.from,R.to);
-  return {by:meName(),at:new Date().toISOString(),rule:ftRule(),k:holK(),hol:holIn(R.from,R.to).map(function(dk){return dm(dk)+' '+holName(dk);}),
+  return {by:meName(),at:new Date().toISOString(),rule:ftRule(),hol:[holTxt(holIn(R.from,R.to))].filter(Boolean),
     pt:r.pt.map(function(x){var le=ptLe(x),m=Math.round(x.hours*(x.st.rate||0));return [x.st.code||'',x.st.name,Math.round(x.hours*100)/100,x.st.rate||0,m,le.h,le.v,m+le.v];}),
     ft:ftAoa2(r.ft,R.from,R.to).slice(1),tot:{pt:T.pt,ptLe:T.ptLe,ft:T.ft}};
 }
@@ -7304,7 +7314,7 @@ function payLockView(ym,L,r,from,to){
   if(Math.abs(df)>=1)h+='<div class="req-w soft">Lịch / đơn giá / lương hiện tại tính ra <b>'+fmtVND(now)+' đ</b>, '+(df>0?'cao':'thấp')+' hơn số đã chốt <b>'+fmtVND(Math.abs(df))+' đ</b>. '+(costAdmin()?'Muốn cập nhật: Mở chốt rồi chốt lại.':'Báo quản lý chuỗi nếu cần chốt lại.')+'</div>';
   h+='<div class="kpis"><div class="kpi"><b>'+fmtVND(L.tot.pt)+'</b><span>lương PT theo giờ (đ)</span></div>'+(L.tot.ptLe?'<div class="kpi"><b>'+fmtVND(L.tot.ptLe)+'</b><span>PT làm ngày lễ (đ)</span></div>':'')+'<div class="kpi"><b>'+fmtVND(L.tot.ft)+'</b><span>lương FT (đ)</span></div><div class="kpi"><b>'+fmtVND(was)+'</b><span>tổng đã chốt (đ)</span></div></div>';
   h+='<h3 class="sub">PT</h3>'+tbl(PT_HEAD,L.pt,[3,4,6,7]);
-  h+='<h3 class="sub">FT</h3><p class="sm muted">Cách tính lúc chốt: '+esc(L.rule)+'.'+(L.hol&&L.hol.length?' Ngày lễ: '+esc(L.hol.join(', '))+' · hệ số '+Math.round(L.k*100)+'%.':'')+'</p>'+tbl(ftAoa2([],from,to)[0],L.ft,[6,7,9,11,12]);
+  h+='<h3 class="sub">FT</h3><p class="sm muted">Cách tính lúc chốt: '+esc(L.rule)+'.'+(L.hol&&L.hol.length?' Ngày lễ: '+esc(L.hol.join(', '))+(L.k?' · hệ số '+Math.round(L.k*100)+'%':'')+'.':'')+'</p>'+tbl(ftAoa2([],from,to)[0],L.ft,[6,7,9,11,12]);
   h+='<div class="row"><button class="btn primary" data-act="paylockxlsx" data-id="'+ym+'">Tải Excel số đã chốt</button><button class="btn" data-act="paylive">Xem số tính theo lịch hiện tại</button>'+(costAdmin()?cbtn('payunlock:'+ym,'Mở chốt','Bấm lần nữa để mở chốt','ghost danger'):'')+'</div>';
   return h;
 }
@@ -7316,32 +7326,54 @@ function payLockXlsx(ym){
     return wb;},'Luong_da_chot_'+siteSlug()+'_'+ym+'.xlsx');
 }
 
-/* ---------- ngày lễ: quản lý chuỗi sửa ở Lương & ngân sách ---------- */
+/* ---------- ngày lễ: bảng giống MISA, quản lý chuỗi sửa ở Lương & ngân sách ---------- */
+function holSiteTxt(h){if(!h.sites||!h.sites.length)return 'Toàn chuỗi';return h.sites.map(function(u){var x=hrSite(u);return x?x.name:u;}).join(', ');}
+function holFmt(dk){return dk?dk.slice(8)+'/'+dk.slice(5,7)+'/'+dk.slice(0,4):'';}
 function renderHol(){
-  holLoad();var adm=costAdmin(),ed=HOL.edit,d=holDays(),ks=Object.keys(d).sort();
-  var h='<details class="panel fold"><summary><h2>Ngày lễ &amp; lương ngày lễ</h2></summary><p class="sm">Áp dụng mọi site. Làm ngày lễ trả <b>'+Math.round(holK()*100)+'%</b> (BLLĐ 2019 Điều 98: ít nhất 300%). PT: thêm '+Math.round((holK()-1)*100)+'% đơn giá cho giờ làm ngày lễ. FT: ngày lễ là ngày nghỉ có lương; đi làm thì thêm '+Math.round(holK()*100)+'% lương ngày.'
-    +(HOL.d?'':' <b>Đang dùng danh sách mặc định</b> (lễ dương lịch).')+' Tết Nguyên đán, Giỗ Tổ Hùng Vương và ngày nghỉ kèm Quốc khánh theo âm lịch / thông báo hằng năm: thêm khi có lịch nghỉ chính thức.</p>';
-  if(ed)h+='<label class="fl wide">Mỗi dòng 1 ngày: ngày/tháng/năm, tên ngày lễ<textarea class="in" rows="10" data-hol="list">'+esc(ed.list)+'</textarea></label><label class="fl">Hệ số làm ngày lễ<input class="in num" inputmode="decimal" data-hol="k" value="'+esc(ed.k)+'"></label>'
-    +'<div class="row"><button class="btn primary" data-act="holsave"'+(HOL.busy?' disabled':'')+'>Lưu ngày lễ</button><button class="btn ghost" data-act="holcancel">Huỷ</button></div>';
-  else h+='<div class="tblwrap"><table class="tbl"><thead><tr><th>Ngày</th><th>Thứ</th><th>Ngày lễ</th></tr></thead><tbody>'+ks.map(function(k){return '<tr><td class="mono">'+k.slice(8)+'/'+k.slice(5,7)+'/'+k.slice(0,4)+'</td><td>'+DAYS[dow(k)]+'</td><td>'+esc(d[k])+'</td></tr>';}).join('')+'</tbody></table></div>'
-    +(adm?'<div class="row"><button class="btn" data-act="holedit">'+lockIcon()+' Sửa ngày lễ</button></div>':'');
+  holLoad();var adm=costAdmin(),ed=HOL.edit,L=ed||holList(),ys={},y=HOL.y||String(new Date().getFullYear());
+  L.forEach(function(h){if(h.from)ys[h.from.slice(0,4)]=1;});ys[y]=1;
+  var rows=L.map(function(h,i){return {h:h,i:i};}).filter(function(r){return (r.h.from||'').slice(0,4)===y||(r.h.to||'').slice(0,4)===y||!r.h.from;}).sort(function(a,b){return (a.h.from||'9')<(b.h.from||'9')?-1:1;});
+  var h='<details class="panel fold"'+(ed?' open':'')+'><summary><h2>Ngày lễ &amp; lương ngày lễ</h2></summary>'
+    +'<p class="sm">Mỗi ngày lễ một hệ số. <b>PT</b> làm ngày lễ: tổng = hệ số × đơn giá giờ (300% là thêm 200%). <b>FT</b>: ngày lễ là ngày nghỉ có lương, không đi làm vẫn tính công; đi làm thì thêm hệ số × lương ngày. BLLĐ 2019 Điều 98: ngày lễ, Tết ít nhất 300%.'
+    +(HOL.list?'':' <b>Đang dùng danh sách mặc định 2026</b> (theo danh sách ngày nghỉ công ty cho Phòng vận hành Miền Nam), hệ số 300%: chỉnh lại và bấm Lưu.')+'</p>'
+    +'<div class="row"><label class="fl inl">Năm <select class="in" data-holy>'+Object.keys(ys).sort().map(function(v){return '<option'+(v===y?' selected':'')+'>'+v+'</option>';}).join('')+'</select></label></div>';
+  h+='<div class="tblwrap"><table class="tbl holtbl"><thead><tr><th>Tên ngày nghỉ</th><th>Thời gian</th><th class="n">Hệ số</th><th>Đối tượng áp dụng</th><th>Ghi chú</th>'+(ed?'<th></th>':'')+'</tr></thead><tbody>';
+  if(!rows.length)h+='<tr><td colspan="'+(ed?6:5)+'" class="emptyrow">Chưa có ngày lễ năm '+y+'.</td></tr>';
+  rows.forEach(function(r){var x=r.h,i=r.i,f=function(k){return 'data-hole="'+i+'|'+k+'"';};
+    if(!ed){h+='<tr><td><b>'+esc(x.name)+'</b></td><td class="mono">'+holFmt(x.from)+' – '+holFmt(x.to||x.from)+'</td><td class="n"><b>'+Math.round((+x.k||0)*100)+'%</b></td><td class="sm">'+esc(holSiteTxt(x))+'</td><td class="sm">'+esc(x.note||'')+'</td></tr>';return;}
+    var all=!x.sites||!x.sites.length;
+    h+='<tr><td><input class="in" '+f('name')+' value="'+esc(x.name||'')+'" placeholder="Tên ngày nghỉ"></td>'
+      +'<td><div class="row nowrap"><input class="in" type="date" '+f('from')+' value="'+esc(x.from||'')+'"><span>–</span><input class="in" type="date" '+f('to')+' value="'+esc(x.to||x.from||'')+'"></div></td>'
+      +'<td class="n"><select class="in" '+f('k')+'>'+[1,1.5,2,3,4].concat([+x.k].filter(function(v){return v&&[1,1.5,2,3,4].indexOf(v)<0;})).map(function(v){return '<option value="'+v+'"'+(+x.k===v?' selected':'')+'>'+Math.round(v*100)+'%</option>';}).join('')+'</select></td>'
+      +'<td><details class="holsites"'+(HOL.open===i?' open':'')+'><summary>'+esc(holSiteTxt(x))+'</summary><label class="chk"><input type="checkbox" '+f('all')+(all?' checked':'')+'> Toàn chuỗi</label>'
+      +hrSites().map(function(s){return '<label class="chk"><input type="checkbox" '+f('site:'+s.uid)+(!all&&x.sites.indexOf(s.uid)>=0?' checked':'')+'> '+esc(s.name)+'</label>';}).join('')+'</details></td>'
+      +'<td><input class="in" '+f('note')+' value="'+esc(x.note||'')+'" placeholder="Ghi chú"></td><td><button class="btn sm ghost danger" data-act="holdel" data-v="'+i+'">Xoá</button></td></tr>';});
+  h+='</tbody></table></div>';
+  if(ed)h+='<div class="row"><button class="btn" data-act="holadd">+ Thêm ngày nghỉ</button><button class="btn primary" data-act="holsave"'+(HOL.busy?' disabled':'')+'>Lưu ngày lễ</button><button class="btn ghost" data-act="holcancel">Huỷ</button></div>';
+  else if(adm)h+='<div class="row"><button class="btn" data-act="holedit">'+lockIcon()+' Sửa ngày lễ</button></div>';
   return h+'</details>';
 }
-function holParse(txt){var d={},bad=[];String(txt||'').split(/\n/).forEach(function(l){l=l.trim();if(!l)return;var m=l.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})\s*[,;:\-–·]?\s*(.*)$/);if(!m){bad.push(l);return;}
-  var k=m[3]+'-'+(m[2].length<2?'0':'')+m[2]+'-'+(m[1].length<2?'0':'')+m[1];d[k]=m[4]||'Ngày lễ';});return {d:d,bad:bad};}
 $app.addEventListener('click',function(e){
   var b=e.target.closest('[data-act]');if(!b||view.mod!=='cost')return;var a=b.dataset.act;
-  if(a==='holedit'&&costAdmin()){var d=holDays();HOL.edit={list:Object.keys(d).sort().map(function(k){return k.slice(8)+'/'+k.slice(5,7)+'/'+k.slice(0,4)+', '+d[k];}).join('\n'),k:String(holK())};render();}
+  if(a==='holedit'&&costAdmin()){HOL.edit=clone(holList());render();}
   else if(a==='holcancel'){HOL.edit=null;render();}
+  else if(a==='holadd'&&HOL.edit){var y=HOL.y||String(new Date().getFullYear());HOL.edit.push({id:'h'+rid(),name:'',from:y+'-01-01',to:y+'-01-01',k:3,sites:[],note:''});render();}
+  else if(a==='holdel'&&HOL.edit){HOL.edit.splice(+b.dataset.v,1);render();}
   else if(a==='holsave'&&costAdmin()&&HOL.edit&&DB){
-    var p=holParse(HOL.edit.list),k=parseFloat(String(HOL.edit.k).replace(',','.'));
-    if(p.bad.length){toast('Dòng chưa đúng dạng ngày/tháng/năm, tên: '+p.bad.slice(0,3).join(' | '),9000);return;}
-    if(!(k>=1&&k<=5)){toast('Hệ số từ 1 đến 5 (300% là 3).');return;}
-    HOL.busy=true;render();
-    DB.doc('cfg/holidays').set({d:p.d,k:k,by:meName(),at:new Date().toISOString()}).then(function(){HOL.d=p.d;HOL.k=k;HOL.edit=null;HOL.busy=false;render();toast('Đã lưu ngày lễ.');},function(er){HOL.busy=false;render();toast((er&&er.message)||'Chưa lưu được, thử lại.',7000);});
+    var L=HOL.edit,bad=[];
+    L.forEach(function(x,i){x.name=String(x.name||'').trim();if(!x.to)x.to=x.from;if(!x.name||!/^\d{4}-\d{2}-\d{2}$/.test(x.from||'')||!/^\d{4}-\d{2}-\d{2}$/.test(x.to)||x.to<x.from||!(+x.k>=1&&+x.k<=5))bad.push(x.name||('dòng '+(i+1)));x.k=+x.k;});
+    if(bad.length){toast('Kiểm tra tên, ngày (đến ngày không trước từ ngày), hệ số: '+bad.slice(0,3).join(', '),9000);return;}
+    L.sort(function(a1,b1){return a1.from<b1.from?-1:1;});HOL.busy=true;render();
+    DB.doc('cfg/holidays').set({list:L,by:meName(),at:new Date().toISOString()}).then(function(){HOL.list=L;HOL.edit=null;HOL.busy=false;render();toast('Đã lưu ngày lễ. Số lương các tháng chưa chốt tính lại theo hệ số mới.');},function(er){HOL.busy=false;render();toast((er&&er.message)||'Chưa lưu được, thử lại.',7000);});
   }
 });
-$app.addEventListener('input',function(e){var t=e.target,k=t.dataset&&t.dataset.hol;if(k&&HOL.edit)HOL.edit[k]=t.value;});
+function holField(t){var k=t.dataset&&t.dataset.hole;if(!k||!HOL.edit)return;var p=k.split('|'),x=HOL.edit[+p[0]],f=p[1];if(!x)return null;
+  HOL.open=+p[0];if(f==='all'){if(t.checked)x.sites=[];return 1;}
+  if(f.indexOf('site:')===0){var u=f.slice(5);x.sites=(x.sites||[]).filter(function(v){return v!==u;});if(t.checked)x.sites.push(u);return 1;}
+  if(f==='from'&&(!x.to||x.to<t.value))x.to=t.value;
+  x[f]=f==='k'?+t.value:t.value;return f==='from'?1:0;}
+$app.addEventListener('input',function(e){if(e.target.type!=='checkbox')holField(e.target);});
+$app.addEventListener('change',function(e){var t=e.target;if(t.dataset&&t.dataset.holy!=null&&view.mod==='cost'){HOL.y=t.value;render();return;}if(holField(t)===1)render();});
 
 /* ================= ĐỀ XUẤT TĂNG LƯƠNG / ĐỔI VỊ TRÍ GỬI GIÁM ĐỐC (31/10/2026, Phúc) =================
    Có ở 2 nơi, cùng 1 cách làm:
