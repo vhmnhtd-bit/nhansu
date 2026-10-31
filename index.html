@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <base target="_top">
 <title>Quản lý nhân sự Miền Nam</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap">
 <style id="app-css">
 /* Layout: bảng ca — cột tên cố định, 7 cột ngày, chân bảng đối chiếu định biên theo đúng cột ngày */
 :root{
@@ -1180,8 +1180,31 @@ details.fold.ottypes>summary{display:flex;flex-wrap:wrap;align-items:baseline;ga
 .plmode .opt.on{background:var(--accent);color:#fff;border-color:var(--accent)}
 .plmode .opt.on small{color:rgba(255,255,255,.85)}
 @media (max-width:760px){.plmode{display:flex;width:100%}.plmode .opt{flex:1 1 0}}
-.hrctl .seg{flex-wrap:nowrap}
+.hrctl .seg{flex-wrap:nowrap;width:max-content;max-width:100%;overflow-x:auto}.hrctl .seg .opt{white-space:nowrap;flex:none}
 .cost-grid td.mo{white-space:nowrap}.cost-grid .linkbtn{text-align:left}
+/* font (31/10, Phúc: chữ khó nhìn): cả trang dùng 1 họ Be Vietnam Pro (thiết kế cho tiếng Việt, dấu rõ ở cỡ nhỏ).
+   Bỏ JetBrains Mono ở số liệu và Bricolage Grotesque ở tiêu đề; số dùng chữ số đều cột (tabular) để bảng vẫn thẳng hàng. */
+:root{--f-display:"Be Vietnam Pro",system-ui,-apple-system,"Segoe UI",sans-serif;--f-mono:"Be Vietnam Pro",system-ui,-apple-system,"Segoe UI",sans-serif}
+body{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
+h1{letter-spacing:-.015em}h2,h3{letter-spacing:-.005em}
+.tbl thead th{text-transform:none;letter-spacing:0;font-size:12.5px;font-weight:600}
+.code{letter-spacing:0}
+/* đề xuất tăng lương / đổi vị trí (31/10) */
+.propsum{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin:4px 0 14px;padding:10px 14px;border-radius:12px;background:var(--accent-soft)}
+.propsum .grow{flex:1}
+.proplist{display:flex;flex-direction:column;gap:8px}
+.propcard{display:grid;grid-template-columns:minmax(220px,1.4fr) auto minmax(160px,1fr);align-items:center;gap:8px 16px;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:var(--sheet)}
+.propcard.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
+.propck{display:flex;gap:10px;align-items:flex-start;cursor:pointer}.propck input{margin-top:3px;width:18px;height:18px;flex:none}
+.propck small{display:block;color:var(--muted);font-size:12.5px;margin-top:2px}
+.propsc{display:flex;gap:6px}.propsc span{display:flex;flex-direction:column;align-items:center;min-width:46px;padding:4px 6px;border-radius:8px;background:var(--ground)}
+.propsc small{font-size:11px;color:var(--muted)}.propsc b{font-size:14px}.propsc .avg{background:var(--accent-soft)}
+.proptag{justify-self:end}
+.propf{grid-column:1/-1;margin-top:4px}.propcard>.sm,.propcard>.note{grid-column:1/-1;margin:0}
+.cost-grid .near{color:var(--over);font-weight:600}.cbar i.nr{background:var(--over)}
+.kcard.warn b{color:var(--over)}
+.howto ol{margin:8px 0 4px;padding-left:20px;display:flex;flex-direction:column;gap:4px}
+@media (max-width:760px){.propcard{grid-template-columns:1fr}.proptag{justify-self:start}}
 </style>
 </head>
 <body>
@@ -1254,7 +1277,7 @@ body{margin:0}
 @media (max-width:600px){.ab-in{padding:6px 16px}.ab-brand small,.ab-chip span{display:none}.ab-chip{padding:3px}.ab-chip svg{display:none}}
 </style>
 <div id="xc-login" class="xc-login" hidden></div>
-<script id="xc-shim">window.XC_BUILD='2026-10-31 11:06';
+<script id="xc-shim">window.XC_BUILD='2026-10-31 11:27';
 (function(){
 'use strict';
 var TOKEN_KEY='xc_token';
@@ -1558,7 +1581,7 @@ else call('me').then(function(me){ME=me;if(ME.mustChange){lsSet(null);TOKEN=null
 var DAYS=['T2','T3','T4','T5','T6','T7','CN'];
 var DAY_FULL=['Thứ Hai','Thứ Ba','Thứ Tư','Thứ Năm','Thứ Sáu','Thứ Bảy','Chủ Nhật'];
 var TITLE='Bảng Xếp Ca Tuần';
-var FONTS='<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=JetBrains+Mono:wght@400;500&display=swap">';
+var FONTS='<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap">';
 var RESET=':root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif;background:#fafaf9}img{max-width:100%}[hidden]{display:none!important}';
 var XLSX_SRC='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
 var EXCELJS_SRC='https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js';
@@ -3734,7 +3757,7 @@ function exportMgr(){
    Gắn vào trong xep-ca.html khi build (dùng chung S, MGR, withSite, payroll…).
    Dữ liệu nhân sự nằm ngay trong site/<mã>.staff: start (ngày vào làm), quitDate (ngày làm cuối),
    quitReason, quitNote, phone, dob, note. Biến động tính từ start/quitDate. */
-var MODS=[['dash','Tổng quan'],['cost','Lương & dự toán'],['org','Cơ cấu nhân sự'],['flow','Biến động'],['people','Hồ sơ nhân viên'],['score','Chấm điểm'],['pip','Diện theo dõi'],['ot','Công thêm'],['report','Báo cáo'],['xc','Xếp ca'],['core','Lịch làm việc'],['perf','Kết quả của tôi'],['perfmgr','Chấm đánh giá']];
+var MODS=[['dash','Tổng quan'],['cost','Lương & ngân sách'],['org','Cơ cấu nhân sự'],['flow','Biến động'],['people','Hồ sơ nhân viên'],['score','Chấm điểm'],['pip','Diện theo dõi'],['ot','Công thêm'],['report','Báo cáo'],['xc','Xếp ca'],['core','Lịch làm việc'],['perf','Kết quả của tôi'],['perfmgr','Chấm đánh giá']];
 var CORE_MODS=['core','perf','perfmgr'];
 /* menu chính gom thành nhóm; mục con của nhóm hiện ở hàng dưới */
 var GROUPS=[['home','Tổng quan',['dash','cost','report']],['hr','Nhân sự',['people','org','flow']],['eval','Đánh giá',['score','pip']],['xc','Xếp ca & công',['xc','ot']],['core','Core team',CORE_MODS]];
@@ -4214,6 +4237,7 @@ function goMod(m){
   if(ROLE==='core'&&CORE_MODS.indexOf(m)<0)m='core';
   view.mod=m;lsSet('hr_mod',m);lsSet('hr_g_'+groupOf(m)[0],m);closePop();
   if(m!=='people'){HR.sel=null;HR.edit=null;}
+  if(m!=='perfmgr')PERF.prop=false;
   if(ROLE==='mgr'&&SITE){mgrBack();return;}
   render();window.scrollTo(0,0);
 }
@@ -4477,7 +4501,7 @@ function scStar3(x,st,ym){return scMonth(x,st,ym).star&&scMonth(x,st,ymAdd(ym,-1
 
 /* ---------- trang Chấm điểm ---------- */
 function scX(){var L=hrSites();if(!L.length)return null;return (ROLE==='mgr'&&HR.scSite&&hrSite(HR.scSite))||L[0];}
-function scSubtabs(){return '<nav class="tabs" role="tablist">'+[['week','Chấm tuần'],['month','Tổng hợp tháng'],['bonus','Điểm cộng']].map(function(t){return '<button class="tab'+(HR.sv===t[0]?' on':'')+'" role="tab" aria-selected="'+(HR.sv===t[0])+'" data-act="scsv" data-v="'+t[0]+'">'+t[1]+'</button>';}).join('')+'</nav>';}
+function scSubtabs(){return '<nav class="tabs" role="tablist">'+[['week','Chấm tuần'],['month','Tổng hợp tháng'],['bonus','Điểm cộng'],['prop','Đề xuất lên Giám đốc']].map(function(t){return '<button class="tab'+(HR.sv===t[0]?' on':'')+'" role="tab" aria-selected="'+(HR.sv===t[0])+'" data-act="scsv" data-v="'+t[0]+'">'+t[1]+'</button>';}).join('')+'</nav>';}
 function scSiteSel(x){if(ROLE!=='mgr')return '';return '<label class="fl wide">Site<select class="in" data-hr="scSite">'+hrSites().map(function(y){return '<option value="'+esc(y.uid)+'"'+(y.uid===x.uid?' selected':'')+'>'+esc(y.name)+'</option>';}).join('')+'</select></label>';}
 function renderScore(){
   var x=scX(),h=hrTop(x?x.name:hrScope(),'Chấm điểm nhân viên');
@@ -4485,7 +4509,8 @@ function renderScore(){
   if(!hrdReady([x]))return h+'<div class="empty">Đang tải dữ liệu chấm điểm…</div>';
   if(HRD[x.uid].err)h+='<p class="ierr">'+esc(HRD[x.uid].err)+'</p>';
   h+=scSubtabs();
-  return h+(HR.sv==='month'?renderScMonth(x):HR.sv==='bonus'?renderScBonus(x):renderScWeek(x));
+  PROP.core=false;
+  return h+(HR.sv==='prop'?(scSiteSel(x)?'<div class="hrctl">'+scSiteSel(x)+'</div>':'')+renderProp('site',x):HR.sv==='month'?renderScMonth(x):HR.sv==='bonus'?renderScBonus(x):renderScWeek(x));
 }
 function scStatePill(c){
   if(!c)return '<span class="pill">—</span>';
@@ -6945,12 +6970,17 @@ $app.addEventListener('click',function(e){
   else if(k==='swap')swapXlsx();
 });
 
-/* ================= LƯƠNG & DỰ TOÁN (31/10/2026, Phúc) =================
-   Tổng lương từng site và cả chuỗi theo tháng, theo quý, so với dự toán.
-   Thực tế = PT (giờ công × đơn giá) + FT (lương tháng ÷ công chuẩn × ngày làm) + công thêm đã duyệt, tính từ lịch đã xếp.
-   Ước cả tháng: tháng chưa xếp lịch hết thì nhân lương PT + FT theo tỷ lệ số ngày (ngày trong tháng / ngày đã có lịch).
-   Dự toán: cfg/budget = {m: {'YYYY-MM': {<mã site>: số tiền}}} (chỉ quản lý chuỗi sửa). Chưa nhập thì lấy số trong file
-   "Định biên nhân sự & dự toán lương Q4/2026 – Miền Nam" (không gồm lương CHT, CHP, BHXH) theo số site. */
+/* ================= LƯƠNG & NGÂN SÁCH (31/10/2026, Phúc) =================
+   Đối chiếu lương thực tế với ngân sách lương (quỹ lương được duyệt) từng site, cả chuỗi, theo tháng và quý.
+   Cùng phạm vi với ngân sách: lương PT (giờ công × đơn giá) + lương FT (lương tháng ÷ công chuẩn × ngày làm) + công thêm đã duyệt;
+   không gồm lương CHT, CHP, BHXH.
+   3 mốc so sánh:
+   - Đã chi đến hôm nay (lịch từ đầu tháng đến hôm nay + công thêm đã duyệt có ngày ≤ hôm nay) so với ngân sách đến hôm nay
+     (ngân sách tháng × số ngày đã qua / số ngày của tháng): biết đang chi nhanh hay chậm so với tiến độ.
+   - Dự kiến cả tháng: lương theo cả lịch đã xếp trong tháng (kể cả ngày tới), phần ngày chưa có lịch nhân theo tỷ lệ; cộng công thêm đã duyệt.
+   - Tháng đã qua: đã chi = dự kiến = số chốt theo lịch.
+   Ngân sách: cfg/budget = {m: {'YYYY-MM': {<mã site>: số tiền}}} (chỉ quản lý chuỗi sửa). Chưa nhập thì lấy số trong file
+   "Định biên nhân sự & dự toán lương Q4/2026 – Miền Nam" theo số site. */
 var BUD={m:{},loaded:false,busy:false,edit:null};
 var BUD_DEF={'2026-10':{45:27734750,55:72570000,56:38132842,57:16500000,64:59721000,37:97800000,66:92000000},
   '2026-11':{45:26984000,55:63065333,56:37289737,57:16100000,64:59787870,37:97800000,66:119000000},
@@ -6962,80 +6992,82 @@ function budOf(x,ym){
   return {v:0,src:''};
 }
 function costAdmin(){return ROLE==='mgr'&&!OFFICE;}
-function ymOfKey(k){return k.slice(0,7);}
 function ymRange(ym){var y=+ym.slice(0,4),m=+ym.slice(5,7);return {from:keyOf(new Date(y,m-1,1)),to:keyOf(new Date(y,m,0))};}
 function ymName(ym){return 'T'+(+ym.slice(5,7))+'/'+ym.slice(0,4);}
 function costQ(){var c=HR.cq;if(!c){var n=new Date();c=HR.cq={y:n.getFullYear(),q:Math.floor(n.getMonth()/3)+1};}return c;}
 function costMonths(c){var out=[];for(var i=0;i<3;i++){var m=(c.q-1)*3+i+1;out.push(c.y+'-'+(m<10?'0':'')+m);}return out;}
+/* lương PT + FT theo lịch trong khoảng ngày */
+function costPay(x,a,b){return withSite(x.s,function(){var r=payroll(a,b),pt=0,ft=0,nos=0;r.pt.forEach(function(y){pt+=y.hours*(y.st.rate||0);});r.ft.forEach(function(y){ft+=ftPay(y.st,Object.keys(y.dset).length);if(!y.st.sal&&y.shifts)nos++;});return {pt:Math.round(pt),ft:ft,nos:nos,sched:countDays(a,b)-r.empty};});}
 /* số liệu 1 site trong 1 tháng */
 function costMonth(x,ym){
-  var R=ymRange(ym),nd=countDays(R.from,R.to),tk=todayKey();
-  var o=withSite(x.s,function(){
-    var r=payroll(R.from,R.to),pt=0,ph=0,ft=0,nos=0;
-    r.pt.forEach(function(y){ph+=y.hours;pt+=y.hours*(y.st.rate||0);});
-    r.ft.forEach(function(y){ft+=ftPay(y.st,Object.keys(y.dset).length);if(!y.st.sal&&y.shifts)nos++;});
-    return {pt:Math.round(pt),ph:ph,ft:ft,ftNoSal:nos,sched:nd-r.empty};
-  });
-  var ot=0,otw=0;otList(x,ym).forEach(function(e){if(e.status==='duyet')ot+=otAmount(e);else if(e.status==='cho')otw+=otAmount(e);});
-  o.ot=ot;o.otWait=otw;o.nd=nd;o.act=o.pt+o.ft+o.ot;o.past=R.to<tk;o.future=R.from>tk;
-  o.est=o.sched?Math.round((o.pt+o.ft)*(o.sched<nd?nd/o.sched:1))+o.ot:(o.ot||null);
-  o.bud=budOf(x,ym);
-  return o;
+  var R=ymRange(ym),nd=countDays(R.from,R.to),tk=todayKey(),past=R.to<tk,future=R.from>tk;
+  var all=costPay(x,R.from,R.to),el=past?nd:future?0:countDays(R.from,tk),now=past?all:future?{pt:0,ft:0,nos:0,sched:0}:costPay(x,R.from,tk);
+  var ot=0,otNow=0,otw=0;otList(x,ym).forEach(function(e){if(e.status==='duyet'){ot+=otAmount(e);if(String(e.date||'')<=tk)otNow+=otAmount(e);}else if(e.status==='cho')otw+=otAmount(e);});
+  var bud=budOf(x,ym);
+  return {nd:nd,el:el,past:past,future:future,pt:all.pt,ft:all.ft,ot:ot,otWait:otw,ftNoSal:all.nos,sched:all.sched,
+    spent:now.pt+now.ft+otNow,spentPt:now.pt,spentFt:now.ft,spentOt:otNow,
+    est:all.sched?Math.round((all.pt+all.ft)*(all.sched<nd?nd/all.sched:1))+ot:(ot||null),
+    bud:bud,budNow:Math.round(bud.v*el/nd)};
 }
-function costPctCell(est,bud){
-  if(est==null)return '<span class="muted">Chưa có lịch</span>';if(!bud)return '<span class="muted">Chưa có dự toán</span>';
-  var p=est/bud*100;return '<span class="'+(p>100?'over':'under')+'">'+fmtPct(p)+'</span>';
-}
-function costBar(est,bud){if(!bud||est==null)return '';var p=est/bud*100;return '<div class="cbar" title="Ước '+fmtPct(p)+' dự toán"><i class="'+(p>100?'ov':'')+'" style="width:'+Math.min(100,p/1.2)+'%"></i><b style="left:'+(100/1.2)+'%"></b></div>';}
-function costSum(list){var t={pt:0,ft:0,ot:0,otWait:0,act:0,est:0,bud:0,hasEst:false,sched:0,nd:0,nos:0};list.forEach(function(o){t.pt+=o.pt;t.ft+=o.ft;t.ot+=o.ot;t.otWait+=o.otWait;t.act+=o.act;t.bud+=o.bud.v;if(o.est!=null){t.est+=o.est;t.hasEst=true;}t.nos+=o.ftNoSal;});if(!t.hasEst)t.est=null;return t;}
+function costPct(v,b){if(v==null)return '<span class="muted">Chưa có lịch</span>';if(!b)return '<span class="muted">Chưa có ngân sách</span>';var p=v/b*100;return '<span class="'+(p>100?'over':p>95?'near':'under')+'">'+fmtPct(p)+'</span>';}
+function costBar(v,b){if(!b||v==null)return '';var p=v/b*100;return '<div class="cbar" title="'+fmtPct(p)+' ngân sách"><i class="'+(p>100?'ov':p>95?'nr':'')+'" style="width:'+Math.min(100,p/1.2)+'%"></i><b style="left:'+(100/1.2)+'%"></b></div>';}
+function costSum(list){var t={pt:0,ft:0,ot:0,otWait:0,spent:0,spentPt:0,spentFt:0,spentOt:0,est:0,bud:0,budNow:0,hasEst:false,nos:0,el:0,nd:0};list.forEach(function(o){['pt','ft','ot','otWait','spent','spentPt','spentFt','spentOt','budNow'].forEach(function(k){t[k]+=o[k];});t.bud+=o.bud.v;if(o.est!=null){t.est+=o.est;t.hasEst=true;}t.nos+=o.ftNoSal;});if(!t.hasEst)t.est=null;return t;}
 function renderCost(){
   budLoad();
   var L=hrPicked(),all=hrSites(),c=costQ(),M=costMonths(c),otOk=hrdReady(all);
-  var h=hrTop(ROLE==='mgr'?'Tài khoản quản lý chuỗi':'Cửa hàng trưởng','Lương & dự toán');
-  var yrs=[c.y-1,c.y,c.y+1];
-  h+='<div class="hrctl"><label class="fl">Năm<select class="in" data-cost="y">'+yrs.map(function(y){return '<option'+(y===c.y?' selected':'')+'>'+y+'</option>';}).join('')+'</select></label>'
-    +'<div class="fl">Quý<div class="seg">'+[1,2,3,4].map(function(q){return '<button class="opt'+(q===c.q?' on':'')+'" data-act="costq" data-v="'+q+'">Quý '+q+'</button>';}).join('')+'</div></div>';
+  var h=hrTop(ROLE==='mgr'?'Tài khoản quản lý chuỗi':'Cửa hàng trưởng','Lương & ngân sách');
+  h+='<div class="hrctl"><label class="fl">Năm<select class="in" data-cost="y">'+[c.y-1,c.y,c.y+1].map(function(y){return '<option'+(y===c.y?' selected':'')+'>'+y+'</option>';}).join('')+'</select></label>'
+    +'<label class="fl">Quý<select class="in" data-cost="q">'+[1,2,3,4].map(function(q){return '<option value="'+q+'"'+(q===c.q?' selected':'')+'>Quý '+q+'</option>';}).join('')+'</select></label>';
   if(ROLE==='mgr')h+='<label class="fl wide">Site<select class="in" data-hr="site"><option value="">Tất cả site</option>'+all.map(function(x){return '<option value="'+esc(x.uid)+'"'+(HR.site===x.uid?' selected':'')+'>'+esc(x.name)+'</option>';}).join('')+'</select></label><button class="btn sm ghost" data-act="mgrrefresh"'+(MGR.busy?' disabled':'')+'>'+(MGR.busy?'Đang tải…':'Làm mới số liệu')+'</button>';
   h+='</div>';
-  if(!BUD.loaded)return h+'<div class="empty">Đang tải dự toán…</div>';
+  if(!BUD.loaded)return h+'<div class="empty">Đang tải ngân sách…</div>';
   var D=L.map(function(x){return {x:x,m:M.map(function(ym){return costMonth(x,ym);})};});
-  var byM=M.map(function(ym,i){return costSum(D.map(function(r){return r.m[i];}));}),Q=costSum(byM.map(function(t){return {pt:t.pt,ft:t.ft,ot:t.ot,otWait:t.otWait,act:t.act,est:t.est,bud:{v:t.bud},ftNoSal:t.nos};}));
+  var byM=M.map(function(ym,i){var t=costSum(D.map(function(r){return r.m[i];}));t.ym=ym;t.past=D.length?D[0].m[i].past:false;t.future=D.length?D[0].m[i].future:false;return t;});
+  var Q=costSum(byM.map(function(t){var o=Object.assign({},t);o.bud={v:t.bud};o.ftNoSal=t.nos;return o;}));
   var scope=ROLE==='mgr'?(HR.site&&L.length===1?L[0].name:'cả chuỗi ('+L.length+' site)'):hrScope();
-  var qp=Q.bud&&Q.est!=null?Q.est/Q.bud*100:null;
-  h+='<div class="kgrid"><div class="kcard"><span>Dự toán quý '+c.q+'/'+c.y+'</span><b>'+fmtVND(Q.bud)+'</b><span>'+esc(scope)+'</span></div>'
-    +'<div class="kcard"><span>Thực tế theo lịch đến nay</span><b>'+fmtVND(Q.act)+'</b><span>PT '+fmtVND(Q.pt)+' · FT '+fmtVND(Q.ft)+' · công thêm '+fmtVND(Q.ot)+'</span></div>'
-    +'<div class="kcard"><span>Ước cả quý</span><b>'+(Q.est==null?'—':fmtVND(Q.est))+'</b><span>tháng chưa xếp đủ lịch được nhân theo số ngày</span></div>'
-    +'<div class="kcard '+(qp==null?'':qp>100?'bad':'good')+'"><span>Ước so với dự toán</span><b>'+(qp==null?'—':fmtPct(qp))+'</b><span>'+(qp==null?'chưa đủ số liệu':qp>100?'vượt '+fmtVND(Q.est-Q.bud)+' đ':'còn '+fmtVND(Q.bud-Q.est)+' đ')+'</span></div></div>';
-  var warn=[];if(Q.nos)warn.push(Q.nos+' lượt FT có ngày làm nhưng chưa nhập lương tháng (Xếp ca → Thiết lập nhân viên hoặc Công & giờ công)');if(Q.otWait)warn.push('công thêm chờ duyệt '+fmtVND(Q.otWait)+' đ chưa tính vào thực tế');if(!otOk)warn.push('đang tải công thêm…');
+  var pNow=Q.budNow?Q.spent/Q.budNow*100:null,pEst=Q.bud&&Q.est!=null?Q.est/Q.bud*100:null,cls=function(p){return p==null?'':p>100?'bad':p>95?'warn':'good';};
+  h+='<details class="panel fold howto"><summary><h2>Cách đối chiếu lương với ngân sách</h2></summary><ol class="sm">'
+    +'<li><b>Ngân sách lương</b> là quỹ lương được duyệt cho mỗi site mỗi tháng (lương PT, FT và các khoản công thêm; không gồm CHT, CHP, BHXH). Số mặc định lấy từ file dự toán Q4; quản lý chuỗi sửa ở khung cuối trang.</li>'
+    +'<li><b>Theo tiến độ:</b> so số <b>đã chi đến hôm nay</b> với <b>ngân sách đến hôm nay</b> (ngân sách tháng chia đều theo ngày). Trên 100% là đang chi nhanh hơn kế hoạch, cần xem lại giờ PT, công thêm.</li>'
+    +'<li><b>Dự kiến cả tháng:</b> lương theo cả lịch đã xếp trong tháng; ngày chưa có lịch được ước theo tỷ lệ. So với ngân sách tháng để biết cuối tháng có vượt không.</li>'
+    +'<li>Hết tháng, số theo lịch là số chốt. Đối chiếu với bảng lương MISA; chênh lệch thường do sửa lịch muộn, đổi ca chưa ghi hoặc công thêm chưa duyệt.</li>'
+    +'<li>Màu: xanh ≤ 95% · vàng 95–100% · đỏ vượt ngân sách.</li></ol></details>';
+  h+='<div class="kgrid"><div class="kcard"><span>Ngân sách lương quý '+c.q+'/'+c.y+'</span><b>'+fmtVND(Q.bud)+'</b><span>'+esc(scope)+'</span></div>'
+    +'<div class="kcard '+cls(pNow)+'"><span>Đã chi đến hôm nay</span><b>'+fmtVND(Q.spent)+'</b><span>'+(Q.budNow?fmtPct(pNow)+' ngân sách đến hôm nay ('+fmtVND(Q.budNow)+')':'quý chưa bắt đầu')+'</span></div>'
+    +'<div class="kcard"><span>Dự kiến cả quý</span><b>'+(Q.est==null?'—':fmtVND(Q.est))+'</b><span>theo lịch đã xếp, ngày chưa có lịch ước theo tỷ lệ</span></div>'
+    +'<div class="kcard '+cls(pEst)+'"><span>Dự kiến so với ngân sách</span><b>'+(pEst==null?'—':fmtPct(pEst))+'</b><span>'+(pEst==null?'chưa đủ số liệu':pEst>100?'vượt '+fmtVND(Q.est-Q.bud)+' đ':'còn '+fmtVND(Q.bud-Q.est)+' đ')+'</span></div></div>';
+  var warn=[];if(Q.nos)warn.push(Q.nos+' lượt FT có ngày làm nhưng chưa nhập lương tháng (Xếp ca → Thiết lập nhân viên hoặc Công & giờ công)');if(Q.otWait)warn.push('công thêm chờ duyệt '+fmtVND(Q.otWait)+' đ chưa tính');if(!otOk)warn.push('đang tải công thêm…');
   if(warn.length)h+='<p class="note">'+esc(warn.join(' · '))+'.</p>';
   /* bảng theo tháng */
-  h+='<section class="panel"><div class="panel-h"><h2>Theo tháng · '+esc(scope)+'</h2><p>Thực tế tính từ lịch đã xếp (có đổi ca, nghỉ phép) và công thêm đã duyệt. Ước cả tháng = lương PT + FT nhân theo số ngày còn chưa có lịch, cộng công thêm đã duyệt.</p></div>'
-    +'<div class="tblwrap"><table class="tbl cost-grid"><thead><tr><th>Tháng</th><th class="n">Lương PT</th><th class="n">Lương FT</th><th class="n">Công thêm</th><th class="n">Thực tế</th><th class="n">Lịch đã có</th><th class="n">Ước cả tháng</th><th class="n">Dự toán</th><th class="n">Ước / dự toán</th><th></th></tr></thead><tbody>';
-  M.forEach(function(ym,i){var t=byM[i],sd=0,nd=0;D.forEach(function(r){sd+=r.m[i].sched;nd+=r.m[i].nd;});
-    h+='<tr><td><b>'+ymName(ym)+'</b></td><td class="n">'+fmtVND(t.pt)+'</td><td class="n">'+fmtVND(t.ft)+'</td><td class="n">'+fmtVND(t.ot)+'</td><td class="n"><b>'+fmtVND(t.act)+'</b></td><td class="n">'+(L.length===1?sd+'/'+nd+' ngày':fmtPct(nd?sd/nd*100:0))+'</td><td class="n">'+(t.est==null?'—':fmtVND(t.est))+'</td><td class="n">'+fmtVND(t.bud)+'</td><td class="n">'+costPctCell(t.est,t.bud)+'</td><td>'+costBar(t.est,t.bud)+'</td></tr>';});
-  h+='</tbody><tfoot><tr><td>Quý '+c.q+'</td><td class="n">'+fmtVND(Q.pt)+'</td><td class="n">'+fmtVND(Q.ft)+'</td><td class="n">'+fmtVND(Q.ot)+'</td><td class="n">'+fmtVND(Q.act)+'</td><td></td><td class="n">'+(Q.est==null?'—':fmtVND(Q.est))+'</td><td class="n">'+fmtVND(Q.bud)+'</td><td class="n">'+costPctCell(Q.est,Q.bud)+'</td><td>'+costBar(Q.est,Q.bud)+'</td></tr></tfoot></table></div></section>';
+  h+='<section class="panel"><div class="panel-h"><h2>Theo tháng · '+esc(scope)+'</h2><p>Đã chi = lương PT + FT theo lịch đến hôm nay + công thêm đã duyệt. Tiến độ = đã chi / ngân sách đến hôm nay.</p></div>'
+    +'<div class="tblwrap"><table class="tbl cost-grid"><thead><tr><th>Tháng</th><th class="n">Ngân sách</th><th class="n">Đã chi đến hôm nay</th><th class="n">Ngân sách đến hôm nay</th><th class="n">Tiến độ</th><th class="n">Dự kiến cả tháng</th><th class="n">Dự kiến / ngân sách</th><th></th></tr></thead><tbody>';
+  byM.forEach(function(t){
+    h+='<tr><td><b>'+ymName(t.ym)+'</b><div class="sm muted">'+(t.past?'đã qua':t.future?'chưa tới':'đang chạy')+'</div></td><td class="n">'+fmtVND(t.bud)+'</td>'
+      +'<td class="n"><b>'+fmtVND(t.spent)+'</b><div class="sm muted">PT '+fmtVND(t.spentPt)+' · FT '+fmtVND(t.spentFt)+' · CT '+fmtVND(t.spentOt)+'</div></td>'
+      +'<td class="n">'+(t.future?'—':fmtVND(t.budNow))+'</td><td class="n">'+(t.future?'—':costPct(t.spent,t.budNow))+'</td>'
+      +'<td class="n">'+(t.est==null?'—':fmtVND(t.est))+'</td><td class="n">'+costPct(t.est,t.bud)+'</td><td>'+costBar(t.est,t.bud)+'</td></tr>';});
+  h+='</tbody><tfoot><tr><td>Quý '+c.q+'</td><td class="n">'+fmtVND(Q.bud)+'</td><td class="n">'+fmtVND(Q.spent)+'</td><td class="n">'+fmtVND(Q.budNow)+'</td><td class="n">'+(Q.budNow?costPct(Q.spent,Q.budNow):'—')+'</td><td class="n">'+(Q.est==null?'—':fmtVND(Q.est))+'</td><td class="n">'+costPct(Q.est,Q.bud)+'</td><td>'+costBar(Q.est,Q.bud)+'</td></tr></tfoot></table></div></section>';
   /* bảng theo site */
   if(D.length>1){
-    h+='<section class="panel"><div class="panel-h"><h2>Theo site · ước so với dự toán</h2><p>Mỗi ô: ước cả tháng / dự toán. Đỏ là vượt dự toán. Bấm tên site để xem riêng.</p></div><div class="tblwrap"><table class="tbl cost-grid"><thead><tr><th>Site</th>'+M.map(function(ym){return '<th class="n mo">'+ymName(ym)+'</th>';}).join('')+'<th class="n mo">Quý '+c.q+' ước</th><th class="n">Dự toán quý</th><th class="n">%</th></tr></thead><tbody>';
+    h+='<section class="panel"><div class="panel-h"><h2>Theo site · dự kiến so với ngân sách</h2><p>Mỗi ô: dự kiến cả tháng / ngân sách tháng. Cột tiến độ: đã chi đến hôm nay so với ngân sách đến hôm nay của quý. Bấm tên site để xem riêng.</p></div><div class="tblwrap"><table class="tbl cost-grid"><thead><tr><th>Site</th>'+M.map(function(ym){return '<th class="n mo">'+ymName(ym)+'</th>';}).join('')+'<th class="n mo">Tiến độ quý</th><th class="n">Dự kiến quý</th><th class="n">Ngân sách quý</th><th class="n">%</th></tr></thead><tbody>';
     D.forEach(function(r){var s=costSum(r.m);
-      h+='<tr><td><button class="linkbtn" data-act="costsite" data-id="'+esc(r.x.uid)+'"><b>'+esc(r.x.name)+'</b></button></td>'+r.m.map(function(o){return '<td class="n mo">'+(o.est==null?'<span class="muted">—</span>':fmtVND(o.est))+'<br><span class="sm muted">/ '+fmtVND(o.bud.v)+'</span> '+costPctCell(o.est,o.bud.v)+'</td>';}).join('')
-        +'<td class="n mo"><b>'+(s.est==null?'—':fmtVND(s.est))+'</b></td><td class="n">'+fmtVND(s.bud)+'</td><td class="n">'+costPctCell(s.est,s.bud)+'</td></tr>';});
-    h+='</tbody><tfoot><tr><td>Cả chuỗi</td>'+byM.map(function(t){return '<td class="n mo">'+(t.est==null?'—':fmtVND(t.est))+'<br><span class="sm">/ '+fmtVND(t.bud)+'</span></td>';}).join('')+'<td class="n mo">'+(Q.est==null?'—':fmtVND(Q.est))+'</td><td class="n">'+fmtVND(Q.bud)+'</td><td class="n">'+costPctCell(Q.est,Q.bud)+'</td></tr></tfoot></table></div></section>';
+      h+='<tr><td><button class="linkbtn" data-act="costsite" data-id="'+esc(r.x.uid)+'"><b>'+esc(r.x.name)+'</b></button></td>'+r.m.map(function(o){return '<td class="n mo">'+(o.est==null?'<span class="muted">—</span>':fmtVND(o.est))+'<br><span class="sm muted">/ '+fmtVND(o.bud.v)+'</span> '+costPct(o.est,o.bud.v)+'</td>';}).join('')
+        +'<td class="n mo">'+(s.budNow?costPct(s.spent,s.budNow):'—')+'</td><td class="n"><b>'+(s.est==null?'—':fmtVND(s.est))+'</b></td><td class="n">'+fmtVND(s.bud)+'</td><td class="n">'+costPct(s.est,s.bud)+'</td></tr>';});
+    h+='</tbody><tfoot><tr><td>Cả chuỗi</td>'+byM.map(function(t){return '<td class="n mo">'+(t.est==null?'—':fmtVND(t.est))+'<br><span class="sm">/ '+fmtVND(t.bud)+'</span></td>';}).join('')+'<td class="n mo">'+(Q.budNow?costPct(Q.spent,Q.budNow):'—')+'</td><td class="n">'+(Q.est==null?'—':fmtVND(Q.est))+'</td><td class="n">'+fmtVND(Q.bud)+'</td><td class="n">'+costPct(Q.est,Q.bud)+'</td></tr></tfoot></table></div></section>';
   }
-  /* dự toán */
   h+=renderBudget(all,M,c);
   return h;
 }
 function renderBudget(all,M,c){
   var ed=BUD.edit,adm=costAdmin();
-  var h='<details class="panel fold"'+(ed?' open':'')+'><summary><h2>Dự toán lương quý '+c.q+'/'+c.y+'</h2></summary><p class="sm muted">Không gồm lương CHT, CHP và BHXH. Ô ghi "theo file" là số lấy từ file Định biên nhân sự &amp; dự toán lương Q4/2026; quản lý chuỗi sửa được.'+(adm?'':' Chỉ quản lý chuỗi sửa dự toán.')+'</p>';
+  var h='<details class="panel fold"'+(ed?' open':'')+'><summary><h2>Ngân sách lương quý '+c.q+'/'+c.y+'</h2></summary><p class="sm muted">Quỹ lương được duyệt cho từng site, không gồm lương CHT, CHP và BHXH. Ô ghi "theo file" là số lấy từ file Định biên nhân sự &amp; dự toán lương Q4/2026.'+(adm?'':' Chỉ quản lý chuỗi sửa ngân sách.')+'</p>';
   h+='<div class="tblwrap"><table class="tbl bud"><thead><tr><th>Site</th>'+M.map(function(ym){return '<th class="n">'+ymName(ym)+'</th>';}).join('')+'<th class="n">Quý</th></tr></thead><tbody>';
   var tot=M.map(function(){return 0;});
   all.forEach(function(x){var q=0;
     h+='<tr><td>'+esc(x.name)+'</td>'+M.map(function(ym,i){var b=budOf(x,ym),v=ed&&ed[ym]&&ed[ym][x.uid]!=null?ed[ym][x.uid]:b.v;q+=+v||0;tot[i]+=+v||0;
-      return '<td class="n">'+(ed?'<input class="in" inputmode="numeric" data-bud="'+ym+'|'+esc(x.uid)+'" value="'+(v?fmtVND(v):'')+'" aria-label="Dự toán '+esc(x.name)+' '+ymName(ym)+'">':fmtVND(b.v)+(b.src==='def'?' <span class="sm muted">theo file</span>':b.src?'':' <span class="sm muted">chưa có</span>'))+'</td>';}).join('')+'<td class="n"><b>'+fmtVND(q)+'</b></td></tr>';});
+      return '<td class="n">'+(ed?'<input class="in" inputmode="numeric" data-bud="'+ym+'|'+esc(x.uid)+'" value="'+(v?fmtVND(v):'')+'" aria-label="Ngân sách '+esc(x.name)+' '+ymName(ym)+'">':fmtVND(b.v)+(b.src==='def'?' <span class="sm muted">theo file</span>':b.src?'':' <span class="sm muted">chưa có</span>'))+'</td>';}).join('')+'<td class="n"><b>'+fmtVND(q)+'</b></td></tr>';});
   h+='</tbody><tfoot><tr><td>Cả chuỗi</td>'+tot.map(function(v){return '<td class="n">'+fmtVND(v)+'</td>';}).join('')+'<td class="n">'+fmtVND(tot.reduce(function(a,b){return a+b;},0))+'</td></tr></tfoot></table></div>';
-  if(adm)h+='<div class="row">'+(ed?'<button class="btn primary" data-act="budsave"'+(BUD.busy?' disabled':'')+'>Lưu dự toán</button><button class="btn ghost" data-act="budcancel">Huỷ</button>':'<button class="btn" data-act="budedit">'+lockIcon()+' Sửa dự toán</button>')+'</div>';
+  if(adm)h+='<div class="row">'+(ed?'<button class="btn primary" data-act="budsave"'+(BUD.busy?' disabled':'')+'>Lưu ngân sách</button><button class="btn ghost" data-act="budcancel">Huỷ</button>':'<button class="btn" data-act="budedit">'+lockIcon()+' Sửa ngân sách</button>')+'</div>';
   return h+'</details>';
 }
 function budSave(){
@@ -7043,7 +7075,7 @@ function budSave(){
   DB.doc('cfg/budget').get().then(function(sn){var d=sn.exists?sn.data():{};d.m=d.m||{};
     Object.keys(ed).forEach(function(ym){d.m[ym]=d.m[ym]||{};Object.keys(ed[ym]).forEach(function(uid){d.m[ym][uid]=Math.max(0,Math.round(+ed[ym][uid]||0));});});
     d.by=meName();d.at=new Date().toISOString();return DB.doc('cfg/budget').set(d).then(function(){return d;});})
-    .then(function(d){BUD.m=d.m;BUD.edit=null;BUD.busy=false;render();toast('Đã lưu dự toán lương.');},function(e){BUD.busy=false;render();toast((e&&e.message)||'Chưa lưu được, thử lại.',7000);});
+    .then(function(d){BUD.m=d.m;BUD.edit=null;BUD.busy=false;render();toast('Đã lưu ngân sách lương.');},function(e){BUD.busy=false;render();toast((e&&e.message)||'Chưa lưu được, thử lại.',7000);});
 }
 $app.addEventListener('click',function(e){
   var b=e.target.closest('[data-act]');if(!b||view.mod!=='cost')return;var a=b.dataset.act;
@@ -7055,8 +7087,146 @@ $app.addEventListener('click',function(e){
 });
 $app.addEventListener('change',function(e){
   var t=e.target,ds=t.dataset||{};if(view.mod!=='cost')return;
+  if(ds.cost==='q'){costQ().q=+t.value;BUD.edit=null;render();return;}
   if(ds.cost==='y'){costQ().y=+t.value;BUD.edit=null;render();return;}
   if(ds.bud&&BUD.edit){var p=ds.bud.split('|'),v=Math.round(parseNum(t.value));if(isNaN(v))v=0;(BUD.edit[p[0]]||(BUD.edit[p[0]]={}))[p[1]]=Math.max(0,v);render();}
+});
+
+/* ================= ĐỀ XUẤT TĂNG LƯƠNG / ĐỔI VỊ TRÍ GỬI GIÁM ĐỐC (31/10/2026, Phúc) =================
+   Có ở 2 nơi, cùng 1 cách làm:
+   - Đánh giá → Chấm điểm → tab "Đề xuất lên Giám đốc": nhân viên site, căn cứ điểm tháng (scMonth) trong quý.
+   - Core team → Chấm đánh giá → nút "Đề xuất tăng lương / đổi vị trí": người mình chấm, căn cứ điểm chỉ tiêu tháng (perfMonth).
+   Web chỉ gắn nhãn GỢI Ý theo điểm đã có (không tự quyết định): cả các tháng có điểm đều từ Tốt trở lên, không cảnh cáo / điểm liệt /
+   diện theo dõi → "Gợi ý xét tăng lương"; có tháng dưới mức Đạt hoặc đang bị theo dõi → "Lưu ý". Người đề xuất tự chọn người, loại đề xuất, mức lương mới, vị trí mới, lý do.
+   Bản nháp lưu trên máy (localStorage, theo nơi + quý). Xuất Excel: trang "Tờ trình" (để in ký, có cột Giám đốc duyệt) + trang "Căn cứ đánh giá". */
+var PROP={core:false,d:null,key:''};
+var PROP_TYPES=[['luong','Tăng lương'],['vitri','Đổi vị trí'],['ca2','Tăng lương + đổi vị trí']];
+function propQ(){var c=HR.pq;if(!c){var n=new Date();c=HR.pq={y:n.getFullYear(),q:Math.floor(n.getMonth()/3)+1};}return c;}
+function propMonths(c){var out=[];for(var i=1;i<=3;i++){var m=(c.q-1)*3+i;out.push(c.y+'-'+pad(m));}return out;}
+function propStore(src,scope){var c=propQ(),k='xc_prop_'+src+'_'+scope+'_'+c.y+'q'+c.q;if(PROP.key!==k){PROP.key=k;PROP.d=lsGet(k)||{to:'Ban Giám đốc',rows:{}};if(!PROP.d.rows)PROP.d.rows={};}return PROP.d;}
+function propSave(){if(PROP.key)lsSet(PROP.key,PROP.d);}
+function propNextMonth(){var n=new Date();return keyOf(new Date(n.getFullYear(),n.getMonth()+1,1));}
+/* căn cứ của 1 người: điểm từng tháng, trung bình, gợi ý */
+function propSiteRow(x,st,M){
+  var ms=M.map(function(ym){return {ym:ym,R:scMonth(x,st,ym)};}),sc=ms.filter(function(m){return m.R.score!=null;});
+  var avg=sc.length?sc.reduce(function(a,m){return a+m.R.score;},0)/sc.length:null,warns=ms.reduce(function(a,m){return a+m.R.warns;},0),liet=ms.some(function(m){return m.R.liet;}),pip=ms.some(function(m){return m.R.pipM;});
+  var a=M[0]+'-01',b=keyOf(new Date(+M[2].slice(0,4),+M[2].slice(5),0)),to=b<todayKey()?b:todayKey(),hrs=0,nm=0;
+  if(a<=to){withSite(x.s,function(){var pr=payroll(a,to);pr.pt.concat(pr.ft).forEach(function(r){if(r.st.id===st.id)hrs=r.hours;});});nm=Math.max(1,countDays(a,to)/30.4);}
+  var tag=sc.length&&sc.every(function(m){return m.R.score>=75;})&&!warns&&!liet&&!pip?'up':(sc.some(function(m){return m.R.score<60;})||pip||liet||warns)?'warn':'';
+  var why=[sc.some(function(m){return m.R.score<60;})?'có tháng dưới 60 điểm':'',pip?'đang / từng diện theo dõi':'',warns?warns+' cảnh cáo':'',liet?'điểm liệt':''].filter(Boolean).join(', ');
+  var sk=st.skills.map(function(id){return posName(x.s,id);}).filter(Boolean);
+  return {id:st.id,code:st.code||'',name:st.name,unit:x.name,role:st.role,pos:sk[0]||'',skills:sk,ten:tenureLabel(tenureM(st)),
+    months:ms.map(function(m){return {ym:m.ym,v:m.R.score,g:m.R.grade?m.R.grade[0]:'',note:[m.R.star?'Ứng viên NV xuất sắc':'',m.R.warns?m.R.warns+' cảnh cáo':'',m.R.liet?'Điểm liệt':'',m.R.pipM?'Diện theo dõi':''].filter(Boolean).join(', '),bonus:m.R.bonus.total};}),
+    avg:avg,grade:avg==null?'':scGrade(avg)[0],tag:tag,why:why,cur:st.role==='PT'?(+st.rate||0):(+st.sal||0),unitPay:st.role==='PT'?'đ/giờ':'đ/tháng',hpm:nm?hrs/nm:0,
+    auto:(avg==null?'':'Điểm TB quý '+fmtSc(avg)+' ('+scGrade(avg)[0]+')')+(ms.filter(function(m){return m.R.star;}).length?', '+ms.filter(function(m){return m.R.star;}).length+' tháng ứng viên NV xuất sắc':'')+(sk.length>1?', đã đào tạo '+sk.length+' vị trí':'')+(st.start?', thâm niên '+tenureLabel(tenureM(st)):'')};
+}
+function propCoreRow(id,M){
+  var P=perfProfile(id)||{},kit=perfKit(P.kit),m=perfMember(id)||{name:id},d=PERF.p[id]||{};
+  var ms=M.map(function(ym){return {ym:ym,R:perfMonth(id,ym,d)};}).filter(function(x){return x.R&&x.R.done;});
+  var avg=ms.length?ms.reduce(function(a,x){return a+x.R.total;},0)/ms.length:null;
+  var tag=ms.length&&ms.every(function(x){return x.R.total>=80;})?'up':ms.some(function(x){return x.R.total<70;})?'warn':'',why=tag==='warn'?'có tháng dưới 70 điểm':'';
+  var site=P.site&&PERF_SITES[P.site]?PERF_SITES[P.site]:'Core team';
+  return {id:id,code:id,name:m.name,unit:site,role:'',pos:kit?kit.t:'',skills:[],ten:'',
+    months:M.map(function(ym){var x=ms.filter(function(y){return y.ym===ym;})[0];return {ym:ym,v:x?x.R.total:null,g:x?x.R.g[1]+' · '+x.R.g[2]:'',note:x&&x.R.lock?'Đã chốt':x?'Tạm tính':'',bonus:null};}),
+    avg:avg,grade:avg==null?'':perfGrade(avg)[1]+' · '+perfGrade(avg)[2],tag:tag,why:why,cur:0,unitPay:'đ/tháng',hpm:0,
+    auto:avg==null?'':'Điểm đánh giá TB quý '+perfFmt(avg)+' ('+perfGrade(avg)[2]+')'+(ms.filter(function(x){return x.R.total>=90;}).length?', '+ms.filter(function(x){return x.R.total>=90;}).length+' tháng xếp loại A':'')};
+}
+function propRows(src,x){
+  var M=propMonths(propQ());
+  if(src==='core')return perfMine().map(function(id){return propCoreRow(id,M);});
+  var a=M[0]+'-01',b=keyOf(new Date(+M[2].slice(0,4),+M[2].slice(5),0));
+  return x.s.staff.filter(function(st){return onRollRange(st,a,b)&&!(st.quitDate&&st.quitDate<todayKey());}).map(function(st){return propSiteRow(x,st,M);});
+}
+function propCost(r,e){var nw=+e.nw||0,cur=e.cur!=null&&e.cur!==''?+e.cur:r.cur;if(!nw||!(e.t==='luong'||e.t==='ca2'))return 0;return Math.round(r.unitPay==='đ/giờ'?(nw-cur)*r.hpm:nw-cur);}
+function propTag(r){return r.tag==='up'?'<span class="pill ok">Gợi ý xét tăng lương</span>':r.tag==='warn'?'<span class="pill no">Lưu ý: '+esc(r.why)+'</span>':'';}
+function renderProp(src,x){
+  var scope=src==='core'?'core':x.uid,D=propStore(src,scope),c=propQ(),M=propMonths(c),R=propRows(src,x);
+  R.sort(function(a,b){return (D.rows[b.id]&&D.rows[b.id].on?1:0)-(D.rows[a.id]&&D.rows[a.id].on?1:0)||(b.avg==null?-1:b.avg)-(a.avg==null?-1:a.avg);});
+  var sel=R.filter(function(r){return D.rows[r.id]&&D.rows[r.id].on;}),cost=sel.reduce(function(s,r){return s+propCost(r,D.rows[r.id]);},0);
+  var h='<section class="panel prop"><div class="panel-h"><h2>Đề xuất tăng lương / đổi vị trí gửi Giám đốc</h2><p>Chọn người, ghi nội dung đề xuất, rồi tải tờ trình Excel để in ký. Nhãn "Gợi ý" chỉ dựa trên điểm đã chấm trong quý; người đề xuất quyết định. Bản nháp tự lưu trên máy này.</p></div>';
+  h+='<div class="hrctl"><label class="fl">Năm<select class="in" data-propq="y">'+[c.y-1,c.y,c.y+1].map(function(y){return '<option'+(y===c.y?' selected':'')+'>'+y+'</option>';}).join('')+'</select></label>'
+    +'<label class="fl">Kỳ xét<select class="in" data-propq="q">'+[1,2,3,4].map(function(q){return '<option value="'+q+'"'+(q===c.q?' selected':'')+'>Quý '+q+'</option>';}).join('')+'</select></label>'
+    +'<label class="fl wide">Kính gửi<input class="in" data-propf="to" value="'+esc(D.to||'')+'" maxlength="80"></label></div>';
+  h+='<div class="propsum"><b>'+sel.length+'</b> người được đề xuất · chi phí lương tăng thêm ước <b>'+fmtVND(cost)+' đ/tháng</b>'
+    +'<span class="grow"></span><button class="btn primary" data-act="propxlsx"'+(sel.length?'':' disabled')+'>Tải tờ trình Excel</button>'+(sel.length?cbtn('propclear','Xoá nháp','Bấm lần nữa để xoá','ghost'):'')+'</div>';
+  if(!R.length)return h+'<div class="empty">Chưa có ai để đề xuất.</div></section>';
+  h+='<div class="proplist">'+R.map(function(r){
+    var e=D.rows[r.id]||{},on=!!e.on;
+    var head='<label class="propck"><input type="checkbox" data-propck="'+esc(r.id)+'"'+(on?' checked':'')+'><span><b>'+esc(r.name)+'</b> <span class="code">'+esc(r.code)+'</span>'+(r.role?' <span class="pill">'+esc(r.role)+'</span>':'')+'<small>'+esc(r.pos||'—')+(r.ten&&r.ten!=='—'?' · '+esc(r.ten):'')+(src==='core'?' · '+esc(r.unit):'')+'</small></span></label>'
+      +'<div class="propsc">'+r.months.map(function(m){return '<span title="'+esc(ymName(m.ym)+(m.g?': '+m.g:'')+(m.note?' · '+m.note:''))+'"><small>T'+(+m.ym.slice(5))+'</small><b>'+(m.v==null?'—':fmtSc(m.v))+'</b></span>';}).join('')+'<span class="avg"><small>TB quý</small><b>'+(r.avg==null?'—':fmtSc(r.avg))+'</b></span></div><div class="proptag">'+propTag(r)+'</div>';
+    if(!on)return '<div class="propcard">'+head+'</div>';
+    var t=e.t||'luong',sal=t==='luong'||t==='ca2',pos=t==='vitri'||t==='ca2',f=function(k,def){return esc(e[k]!=null?e[k]:def);};
+    var body='<div class="fgrid propf"><label class="fl">Nội dung<select class="in" data-propf="'+esc(r.id)+'|t">'+PROP_TYPES.map(function(o){return '<option value="'+o[0]+'"'+(o[0]===t?' selected':'')+'>'+o[1]+'</option>';}).join('')+'</select></label>'
+      +(sal?'<label class="fl">Lương hiện tại ('+r.unitPay+')<input class="in" inputmode="numeric" data-propf="'+esc(r.id)+'|cur" value="'+((e.cur!=null&&e.cur!=='')?fmtVND(e.cur):r.cur?fmtVND(r.cur):'')+'" placeholder="'+(src==='core'?'nhập lương hiện tại':'chưa có trong hồ sơ')+'"></label>'
+        +'<label class="fl">Lương đề xuất ('+r.unitPay+')<input class="in" inputmode="numeric" data-propf="'+esc(r.id)+'|nw" value="'+(e.nw?fmtVND(e.nw):'')+'"></label>':'')
+      +(pos?'<label class="fl">Vị trí hiện tại<input class="in" data-propf="'+esc(r.id)+'|pnow" value="'+f('pnow',r.pos)+'"></label><label class="fl">Vị trí đề xuất<input class="in" list="prop-pos" data-propf="'+esc(r.id)+'|pnew" value="'+f('pnew','')+'" placeholder="vd: Trưởng ca, Thu ngân"></label>':'')
+      +'<label class="fl">Áp dụng từ<input class="in" type="date" data-propf="'+esc(r.id)+'|from" value="'+f('from',propNextMonth())+'"></label>'
+      +'<label class="fl span2">Lý do, thành tích<textarea class="in" rows="2" data-propf="'+esc(r.id)+'|why" maxlength="400">'+f('why',r.auto)+'</textarea></label></div>';
+    var cst=propCost(r,e);
+    if(sal&&cst)body+='<p class="sm muted">Lương tăng thêm ước '+fmtVND(cst)+' đ/tháng'+(r.unitPay==='đ/giờ'?' (theo '+fmtH(r.hpm)+' giờ/tháng bình quân trong quý)':'')+(r.cur&&e.nw?' · tăng '+fmtPct(((+e.nw)-(e.cur!=null&&e.cur!==''?+e.cur:r.cur))/(e.cur!=null&&e.cur!==''?+e.cur:r.cur)*100):'')+'.</p>';
+    if(r.tag==='warn'&&sal)body+='<p class="note">Người này '+esc(r.why)+'. Ghi rõ lý do nếu vẫn đề xuất tăng lương.</p>';
+    return '<div class="propcard on">'+head+body+'</div>';}).join('')+'</div>';
+  var pl={};if(x)x.s.positions.forEach(function(p){pl[p.name]=1;});['Trưởng ca','Cửa hàng phó (CHP)','Cửa hàng trưởng (CHT)'].forEach(function(n){pl[n]=1;});
+  h+='<datalist id="prop-pos">'+Object.keys(pl).map(function(n){return '<option value="'+esc(n)+'">';}).join('')+'</datalist>';
+  return h+'</section>';
+}
+/* tờ trình Excel */
+function propXlsx(src,x){
+  var scope=src==='core'?'core':x.uid,D=propStore(src,scope),c=propQ(),M=propMonths(c),R=propRows(src,x).filter(function(r){return D.rows[r.id]&&D.rows[r.id].on;});
+  if(!R.length){toast('Chọn ít nhất 1 người.');return;}
+  var miss=R.filter(function(r){var e=D.rows[r.id],t=e.t||'luong';return ((t==='luong'||t==='ca2')&&!(+e.nw>0))||((t==='vitri'||t==='ca2')&&!String(e.pnew||'').trim());});
+  if(miss.length){toast('Còn thiếu lương đề xuất hoặc vị trí đề xuất: '+miss.map(function(r){return r.name;}).join(', ')+'.',7000);return;}
+  var unit=src==='core'?'Core team':x.name,qn='Quý '+c.q+'/'+c.y,who=meName()||'';
+  withExcel(function(EJ){
+    var wb=new EJ.Workbook();wb.creator=TITLE;var ws=wb.addWorksheet('Tờ trình'),N=17,F={name:'Times New Roman',size:12};
+    var put=function(r,c1,c2,v,st){ws.mergeCells(r,c1,r,c2);var cl=ws.getCell(r,c1);cl.value=v;cl.font=Object.assign({},F,st&&st.font||{});cl.alignment=Object.assign({vertical:'middle',wrapText:true},st&&st.al||{});return cl;};
+    put(1,1,6,'HTD GROUP\nPHÒNG VẬN HÀNH MIỀN NAM',{font:{bold:true},al:{horizontal:'center'}});ws.getRow(1).height=34;
+    put(1,10,N,'CỘNG HOÀ XÃ HỘI CHỦ NGHĨA VIỆT NAM\nĐộc lập – Tự do – Hạnh phúc',{font:{bold:true},al:{horizontal:'center'}});
+    var dt=new Date();put(2,10,N,'Ngày '+dt.getDate()+' tháng '+(dt.getMonth()+1)+' năm '+dt.getFullYear(),{font:{italic:true},al:{horizontal:'center'}});
+    put(4,1,N,'TỜ TRÌNH',{font:{bold:true,size:16},al:{horizontal:'center'}});
+    put(5,1,N,'V/v đề xuất điều chỉnh lương và vị trí công việc – kỳ xét '+qn,{font:{bold:true},al:{horizontal:'center'}});
+    put(7,1,N,'Kính gửi: '+(D.to||'Ban Giám đốc'),{font:{bold:true}});
+    put(8,1,N,'Người đề xuất: '+who+'      Đơn vị: '+unit);
+    put(9,1,N,'Căn cứ: kết quả '+(src==='core'?'đánh giá chỉ tiêu (KPI) hằng tháng':'chấm điểm nhân viên hằng tuần, tổng hợp tháng')+' '+qn+' trên hệ thống Quản lý nhân sự Miền Nam (chi tiết ở trang "Căn cứ đánh giá"). Kính đề xuất Giám đốc xem xét các trường hợp sau:');ws.getRow(9).height=34;
+    var H=['STT','Mã NV','Họ và tên','Đơn vị','Vị trí hiện tại','Thâm niên','Điểm TB quý','Xếp loại','Nội dung đề xuất','Lương hiện tại','Lương đề xuất','Đơn vị lương','Tăng (%)','Vị trí đề xuất','Áp dụng từ','Lý do, thành tích','Giám đốc duyệt (Đồng ý / Không)'];
+    var W=[5,10,22,18,16,11,9,12,14,13,13,9,8,16,11,40,16];W.forEach(function(w,i){ws.getColumn(i+1).width=w;});
+    var hr=11;H.forEach(function(t,i){var cl=ws.getCell(hr,i+1);cl.value=t;cl.font=Object.assign({},F,{bold:true,size:11});cl.alignment={horizontal:'center',vertical:'middle',wrapText:true};cl.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFD9E1F2'}};});ws.getRow(hr).height=36;
+    var bd={top:{style:'thin'},left:{style:'thin'},bottom:{style:'thin'},right:{style:'thin'}},tot=0,r=hr;
+    R.forEach(function(p,i){var e=D.rows[p.id],t=e.t||'luong',sal=t==='luong'||t==='ca2',ps=t==='vitri'||t==='ca2',cur=e.cur!=null&&e.cur!==''?+e.cur:p.cur;r++;tot+=propCost(p,e);
+      [i+1,p.code,p.name,p.unit,ps?(e.pnow!=null?e.pnow:p.pos):p.pos,p.ten&&p.ten!=='—'?p.ten:'',p.avg==null?'':Math.round(p.avg*10)/10,p.grade,(PROP_TYPES.filter(function(o){return o[0]===t;})[0]||[0,''])[1],
+        sal?(cur||''):'',sal?+e.nw:'',sal?p.unitPay:'',sal&&cur?{formula:'IF(J'+r+'=0,"",K'+r+'/J'+r+'-1)',result:(+e.nw)/cur-1}:'',ps?String(e.pnew||''):'',e.from?xDate(e.from):xDate(propNextMonth()),String(e.why!=null?e.why:p.auto),'']
+        .forEach(function(v,j){var cl=ws.getCell(r,j+1);cl.value=v;cl.font=Object.assign({},F,{size:11});cl.border=bd;cl.alignment={vertical:'top',wrapText:true,horizontal:[0,6,9,10,12].indexOf(j)>=0?'right':'left'};
+          if(j===9||j===10)cl.numFmt='#,##0';if(j===12)cl.numFmt='0.0%';if(j===14)cl.numFmt='dd/mm/yyyy';});});
+    r+=2;put(r,1,N,'Tổng chi phí lương tăng thêm ước tính: '+fmtVND(tot)+' đ/tháng (PT tính theo giờ công bình quân trong quý; chưa gồm BHXH).',{font:{bold:true}});
+    r+=1;put(r,1,N,'Kính trình Giám đốc xem xét, phê duyệt.',{font:{italic:true}});
+    r+=2;put(r,1,6,'NGƯỜI ĐỀ XUẤT',{font:{bold:true},al:{horizontal:'center'}});put(r,12,N,'GIÁM ĐỐC PHÊ DUYỆT',{font:{bold:true},al:{horizontal:'center'}});
+    r+=1;put(r,1,6,'(Ký, ghi rõ họ tên)',{font:{italic:true},al:{horizontal:'center'}});put(r,12,N,'(Ký, ghi rõ họ tên)',{font:{italic:true},al:{horizontal:'center'}});
+    r+=5;put(r,1,6,who,{font:{bold:true},al:{horizontal:'center'}});
+    ws.pageSetup={paperSize:9,orientation:'landscape',fitToPage:true,fitToWidth:1,fitToHeight:0,margins:{left:0.4,right:0.4,top:0.5,bottom:0.5,header:0.2,footer:0.2}};
+    var ev=[];R.forEach(function(p){p.months.forEach(function(m){ev.push([p.code,p.name,ymName(m.ym),m.v==null?'':Math.round(m.v*10)/10,m.g||'',m.bonus==null?'':m.bonus,m.note||'']);});});
+    xfSheet(wb,'Căn cứ đánh giá',[['Mã NV',10],['Họ tên',24],['Tháng',11],[src==='core'?'Điểm đánh giá':'Điểm tháng',11,'n'],['Xếp loại',18],['Điểm cộng',10,'n'],['Ghi chú',40,'w']],ev,'CĂN CỨ ĐÁNH GIÁ '+qn.toUpperCase()+' · '+unit);
+    return wb;
+  },'To-trinh-de-xuat-luong-vi-tri_'+xfSlug(unit)+'_Q'+c.q+'-'+c.y+'.xlsx');
+}
+function propCtx(){return PROP.core?{src:'core',x:null}:{src:'site',x:scX()};}
+$app.addEventListener('click',function(e){
+  var b=e.target.closest('[data-act]');if(!b)return;var a=b.dataset.act;if(['propq','propxlsx','propclear','propopen','propclose'].indexOf(a)<0)return;
+  if(a==='propopen'){PROP.core=true;PERF.prop=true;render();window.scrollTo(0,0);return;}
+  if(a==='propclose'){PERF.prop=false;PROP.core=false;render();return;}
+  var C=propCtx();
+  if(a==='propq'){propQ().q=+b.dataset.v;render();return;}
+  if(a==='propxlsx'){propXlsx(C.src,C.x);return;}
+  if(a==='propclear'){if(view.confirm!=='propclear'){view.confirm='propclear';render();return;}view.confirm=null;PROP.d.rows={};propSave();render();toast('Đã xoá bản nháp đề xuất.');}
+});
+$app.addEventListener('change',function(e){
+  var t=e.target,ds=t.dataset||{};if(!(ds.propck||ds.propf||ds.propq))return;
+  if(ds.propq){propQ()[ds.propq==='q'?'q':'y']=+t.value;render();return;}
+  var C=propCtx(),D=propStore(C.src,C.src==='core'?'core':C.x.uid);
+  if(ds.propck){var r=D.rows[ds.propck]||(D.rows[ds.propck]={});r.on=t.checked;propSave();render();return;}
+  if(ds.propf==='to'){D.to=t.value;propSave();return;}
+  var p=ds.propf.split('|'),row=D.rows[p[0]]||(D.rows[p[0]]={on:true}),v=t.value;
+  if(p[1]==='cur'||p[1]==='nw'){v=Math.round(parseNum(v));if(isNaN(v))v='';}
+  row[p[1]]=v;propSave();if(['t','cur','nw'].indexOf(p[1])>=0)render();
 });
 
 /* ================= ĐÁNH GIÁ CORE TEAM =================
@@ -7302,10 +7472,11 @@ function perfHistory(mid,d,a){
 }
 /* ---------- Chấm đánh giá (người chấm, quản lý chuỗi) ---------- */
 function renderPerfMgr(){
-  var h=hrTop('Đánh giá core team','Chấm đánh giá','<div class="row"><button class="btn sm" data-xf="perfmgr" title="Tổng hợp tháng, chi tiết chỉ tiêu, nhận xét tuần, tự đánh giá, ghi nhận của quý này">Tải Excel đánh giá</button>'+(perfAdmin()?'<button class="btn sm ghost" data-act="pfsetup">Thiết lập người được chấm</button>':'')+'</div>');
+  var h=hrTop('Đánh giá core team','Chấm đánh giá','<div class="row"><button class="btn sm" data-xf="perfmgr" title="Tổng hợp tháng, chi tiết chỉ tiêu, nhận xét tuần, tự đánh giá, ghi nhận của quý này">Tải Excel đánh giá</button><button class="btn sm" data-act="propopen" title="Chọn người, ghi đề xuất, tải tờ trình Excel gửi Giám đốc">Đề xuất tăng lương / đổi vị trí</button>'+(perfAdmin()?'<button class="btn sm ghost" data-act="pfsetup">Thiết lập người được chấm</button>':'')+'</div>');
   if(PERF.err)h+='<p class="ierr">'+esc(PERF.err)+'</p>';
   if(!PERF.loaded||!CORE.cfg)return h+'<div class="empty">Đang tải…</div>';
   if(PERF.setup&&perfAdmin())return h+perfSetupView();
+  if(PERF.prop){PROP.core=true;return h+'<div class="row"><button class="btn sm" data-act="propclose">← Danh sách người được chấm</button></div>'+renderProp('core',null);}
   if(PERF.sel&&perfMine().indexOf(PERF.sel)>=0)return h+perfPersonView(PERF.sel);
   var L=perfMine(),lw=perfLastWk(),ym=todayKey().slice(0,7);
   if(!L.length)return h+'<div class="empty">Chưa có ai trong danh sách được chấm.'+(perfAdmin()?' Bấm <b>Thiết lập người được chấm</b> để chọn bộ chỉ tiêu và người chấm cho từng người.':'')+'</div>';
