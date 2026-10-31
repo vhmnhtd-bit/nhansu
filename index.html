@@ -1205,6 +1205,9 @@ h1{letter-spacing:-.015em}h2,h3{letter-spacing:-.005em}
 .kcard.warn b{color:var(--over)}
 .howto ol{margin:8px 0 4px;padding-left:20px;display:flex;flex-direction:column;gap:4px}
 @media (max-width:760px){.propcard{grid-template-columns:1fr}.proptag{justify-self:start}}
+
+/* lương FT theo site (31/10) */
+.ftcfg{display:flex;flex-wrap:wrap;gap:10px;margin:8px 0 4px}.ftcfg .fl{min-width:170px;flex:0 1 auto}
 </style>
 </head>
 <body>
@@ -1277,7 +1280,7 @@ body{margin:0}
 @media (max-width:600px){.ab-in{padding:6px 16px}.ab-brand small,.ab-chip span{display:none}.ab-chip{padding:3px}.ab-chip svg{display:none}}
 </style>
 <div id="xc-login" class="xc-login" hidden></div>
-<script id="xc-shim">window.XC_BUILD='2026-10-31 15:06';
+<script id="xc-shim">window.XC_BUILD='2026-10-31 15:55';
 (function(){
 'use strict';
 var TOKEN_KEY='xc_token';
@@ -2547,30 +2550,31 @@ function ftPay(st,days){return st&&st.sal?Math.round(st.sal/ftStd()*days):0;}
 function renderPay(){
   var p=view.pay||(view.pay={from:view.week,to:addDays(view.week,6)});
   var ok=p.from&&p.to&&p.from<=p.to&&countDays(p.from,p.to)<=62,r=ok?payroll(p.from,p.to):null;
-  var h=banners()+'<section class="panel"><div class="panel-h"><h2>Công & giờ công theo lịch</h2><p>PT tính lương theo giờ: giờ công × đơn giá. FT lương tháng: lương tháng ÷ công chuẩn × ngày làm. Số liệu lấy từ lịch đã xếp (đã tính đổi ca, nghỉ phép); có thay đổi thực tế thì sửa lịch trước khi chốt.</p></div>';
+  var h=banners()+'<section class="panel"><div class="panel-h"><h2>Công & giờ công theo lịch</h2><p>PT tính lương theo giờ: giờ công × đơn giá. FT lương tháng theo cách tính của site (phần FT bên dưới). Quản lý chuỗi chốt lương khi xem trọn tháng. Số liệu lấy từ lịch đã xếp (đã tính đổi ca, nghỉ phép); có thay đổi thực tế thì sửa lịch trước khi chốt.</p></div>';
   h+='<div class="payctl"><label class="fl">Từ ngày<input class="in" type="date" id="pay-from" data-pay="from" value="'+esc(p.from)+'"></label><label class="fl">Đến ngày<input class="in" type="date" id="pay-to" data-pay="to" value="'+esc(p.to)+'"></label>'
     +'<div class="row"><button class="btn sm" data-act="payweek">Tuần đang xem</button><button class="btn sm" data-act="paymonth" data-v="0">Tháng này</button><button class="btn sm" data-act="paymonth" data-v="-1">Tháng trước</button><button class="btn sm primary" data-act="dcopen" title="Chọn file phân ca / chấm công MISA: web so từng người, từng ngày và chỉ ra ngày lệch giờ">Đối chiếu file MISA</button></div></div>';
   h+=misaStaleNote();
+  var pym=r?payYm(p.from,p.to):'',plk=payLockOf(pym);
+  if(plk&&!view.payLive){holLoad();return h+payLockView(pym,plk,r,p.from,p.to)+'</section>';}
+  if(plk)h+='<div class="req-w soft">'+lockIcon()+' '+ymName(pym)+' đã chốt lương. Đang xem số tính lại theo lịch hiện tại (không phải số đã chốt). <button class="linkbtn" data-act="paylive">Quay lại số đã chốt</button></div>';
+  else h+=payLockBtn(pym);
   if(!r)return h+'<p class="ierr">Chọn khoảng ngày hợp lệ, tối đa 62 ngày.</p></section>';
   if(r.empty)h+='<p class="sm muted">'+r.empty+' ngày trong khoảng này chưa có ai được xếp ca.</p>';
-  var th=0,tm=0,fm=0,fnos=0;r.pt.forEach(function(x){th+=x.hours;tm+=x.hours*(x.st.rate||0);});r.ft.forEach(function(x){fm+=ftPay(x.st,Object.keys(x.dset).length);if(!x.st.sal)fnos++;});
+  holLoad();
+  var th=0,tm=0,fnos=0,PT=payTotals(r,p.from,p.to),fm=PT.ft,tle=PT.ptLe,hl=holIn(p.from,p.to);r.pt.forEach(function(x){th+=x.hours;tm+=x.hours*(x.st.rate||0);});r.ft.forEach(function(x){if(!x.st.sal)fnos++;});
   h+='<div><h3 class="sub">PT · giờ công và lương theo giờ</h3><p class="sm muted">Giờ công mỗi ca: '+S.shifts.map(function(sh){return esc(sh.name)+' '+fmtH(sh.hours)+' giờ';}).join(' · ')+' · Cả ngày ('+esc(units(fullIds()).map(function(x){return x.name;}).join(' + '))+') '+fmtH(fullHrs())+' giờ. <button class="linkbtn" data-act="tab" data-tab="demand">Sửa giờ công</button></p></div>';
-  h+='<div class="kpis"><div class="kpi"><b>'+fmtH(th)+'</b><span>tổng giờ PT</span></div><div class="kpi"><b data-moneytotal>'+fmtVND(tm)+'</b><span>tổng lương PT (đ)</span></div>'+(r.ft.length?'<div class="kpi"><b>'+fmtVND(fm)+'</b><span>lương FT tạm tính (đ)'+(fnos?' · '+fnos+' FT chưa nhập lương':'')+'</span></div><div class="kpi"><b>'+fmtVND(tm+fm)+'</b><span>tổng PT + FT (đ) · chưa gồm công thêm</span></div>':'')+'</div>';
-  h+='<div class="tblwrap"><table class="tbl pay"><thead><tr><th>Mã NV</th><th>Họ tên</th>'+S.shifts.map(function(sh){return '<th class="n">Ca '+esc(lc(sh.name))+'</th>';}).join('')+'<th class="n">Cả ngày</th><th class="n">Giờ công</th><th class="n">Đơn giá/giờ</th><th class="n">Thành tiền (đ)</th></tr></thead><tbody>';
-  if(!r.pt.length)h+='<tr><td colspan="'+(6+S.shifts.length)+'" class="emptyrow">Không có nhân viên PT.</td></tr>';
+  h+='<div class="kpis"><div class="kpi"><b>'+fmtH(th)+'</b><span>tổng giờ PT</span></div><div class="kpi"><b data-moneytotal>'+fmtVND(tm)+'</b><span>lương PT theo giờ (đ)</span></div>'+(tle?'<div class="kpi"><b>'+fmtVND(tle)+'</b><span>PT làm ngày lễ, trả thêm (đ)</span></div>':'')+(r.ft.length?'<div class="kpi"><b>'+fmtVND(fm)+'</b><span>lương FT (đ)'+(fnos?' · '+fnos+' FT chưa nhập lương':'')+'</span></div><div class="kpi"><b>'+fmtVND(tm+tle+fm)+'</b><span>tổng PT + FT (đ) · chưa gồm công thêm</span></div>':'')+'</div>';
+  h+='<div class="tblwrap"><table class="tbl pay"><thead><tr><th>Mã NV</th><th>Họ tên</th>'+S.shifts.map(function(sh){return '<th class="n">Ca '+esc(lc(sh.name))+'</th>';}).join('')+'<th class="n">Cả ngày</th><th class="n">Giờ công</th><th class="n">Đơn giá/giờ</th><th class="n">Thành tiền (đ)</th>'+(hl.length?'<th class="n">Giờ lễ</th><th class="n">Thêm ngày lễ</th>':'')+'</tr></thead><tbody>';
+  if(!r.pt.length)h+='<tr><td colspan="'+(6+S.shifts.length+(hl.length?2:0))+'" class="emptyrow">Không có nhân viên PT.</td></tr>';
   r.pt.forEach(function(x){
     h+='<tr data-row="'+x.st.id+'" data-hours="'+x.hours+'"><td class="mono">'+esc(x.st.code||'—')+'</td><td>'+esc(x.st.name)+(act(x.st)?'':' <span class="pill no">Đã nghỉ</span>')+'</td>'
       +S.shifts.map(function(sh){return '<td class="n">'+(x.n[sh.id]||0)+'</td>';}).join('')+'<td class="n">'+(x.n.F||0)+'</td><td class="n"><b>'+fmtH(x.hours)+'</b></td>'
       +'<td class="n"><input class="in rate" inputmode="numeric" id="rate-'+x.st.id+'" data-f="srate" data-id="'+x.st.id+'" value="'+(x.st.rate?fmtVND(x.st.rate):'')+'" placeholder="0" aria-label="Đơn giá mỗi giờ của '+esc(x.st.name)+'"></td>'
-      +'<td class="n" data-money="'+x.st.id+'">'+fmtVND(x.hours*(x.st.rate||0))+'</td></tr>';
+      +'<td class="n" data-money="'+x.st.id+'">'+fmtVND(x.hours*(x.st.rate||0))+'</td>'+(hl.length?(function(){var le=ptLe(x);return '<td class="n">'+(le.h?fmtH(le.h):'—')+'</td><td class="n">'+(le.v?fmtVND(le.v):'—')+'</td>';})():'')+'</tr>';
   });
-  h+='</tbody><tfoot><tr><td colspan="'+(3+S.shifts.length)+'">Tổng</td><td class="n">'+fmtH(th)+'</td><td></td><td class="n" data-moneytotal>'+fmtVND(tm)+'</td></tr></tfoot></table></div>';
-  h+='<div><h3 class="sub">FT · ngày công và lương tháng</h3><p class="sm muted">Lương tạm tính = lương tháng ÷ công chuẩn × ngày làm theo lịch (nghỉ phép không tính lương; khoản có lương ghi ở Công thêm). Lương tháng không gồm BHXH, sửa ở đây hoặc ở Thiết lập nhân viên.</p><label class="fl inl">Công chuẩn/tháng <input class="in num" type="text" inputmode="numeric" maxlength="2" id="ftstd" data-f="ftstd" value="'+ftStd()+'" aria-label="Số ngày công chuẩn mỗi tháng của FT"> ngày</label></div>';
-  h+='<div class="tblwrap"><table class="tbl"><thead><tr><th>Mã NV</th><th>Họ tên</th><th class="n">Ngày làm</th><th class="n">Số ca</th><th class="n">Nghỉ phép</th><th class="n">Định mức/tuần</th><th class="n">Lương tháng</th><th class="n">Lương tạm tính (đ)</th></tr></thead><tbody>';
-  if(!r.ft.length)h+='<tr><td colspan="8" class="emptyrow">Không có nhân viên FT.</td></tr>';
-  r.ft.forEach(function(x){h+='<tr><td class="mono">'+esc(x.st.code||'—')+'</td><td>'+esc(x.st.name)+(act(x.st)?'':' <span class="pill no">Đã nghỉ</span>')+'</td><td class="n"><b>'+Object.keys(x.dset).length+'</b> ngày</td><td class="n">'+x.shifts+' ca</td><td class="n">'+x.leave+' ngày</td><td class="n">'+x.st.max+' ngày</td><td class="n"><input class="in rate sal" inputmode="numeric" id="fsal-'+x.st.id+'" data-f="ssal" data-id="'+x.st.id+'" value="'+(x.st.sal?fmtVND(x.st.sal):'')+'" placeholder="đ/tháng" aria-label="Lương tháng của '+esc(x.st.name)+'"></td><td class="n" data-ftmoney="'+x.st.id+'" data-days="'+Object.keys(x.dset).length+'">'+fmtVND(ftPay(x.st,Object.keys(x.dset).length))+'</td></tr>';});
-  if(r.ft.length)h+='</tbody><tfoot><tr><td colspan="7">Tổng lương FT tạm tính</td><td class="n">'+fmtVND(fm)+'</td></tr></tfoot>';else h+='</tbody>';
-  h+='</table></div>';
+  h+='</tbody><tfoot><tr><td colspan="'+(3+S.shifts.length)+'">Tổng</td><td class="n">'+fmtH(th)+'</td><td></td><td class="n" data-moneytotal>'+fmtVND(tm)+'</td>'+(hl.length?'<td></td><td class="n">'+fmtVND(tle)+'</td>':'')+'</tr></tfoot></table></div>';
+  if(hl.length)h+='<p class="sm muted">Ngày lễ trong kỳ: '+hl.map(function(dk){return dm(dk)+' '+esc(holName(dk));}).join(', ')+'. PT làm ngày lễ được trả '+Math.round(holK()*100)+'%: thêm '+Math.round((holK()-1)*100)+'% đơn giá cho mỗi giờ làm ngày lễ.</p>';
+  h+=ftPanel(r,p.from,p.to);
   h+='<div class="row"><button class="btn primary" data-act="payxlsx">Tải file Excel</button><button class="btn" data-act="misaxlsx">Tải file phân ca MISA</button><button class="btn" data-act="paycopy">Sao chép bảng PT</button><button class="btn" data-act="payft">Sao chép bảng FT</button><button class="btn" data-act="paydetail">Sao chép chi tiết PT theo ngày</button></div></section>';
   return h;
 }
@@ -2578,9 +2582,7 @@ function payAoa(rows){
   var head=['Mã NV','Họ tên'].concat(S.shifts.map(function(sh){return 'Ca '+lc(sh.name);})).concat(['Cả ngày','Giờ công','Đơn giá/giờ','Thành tiền']);
   return [head].concat(rows.map(function(x){return [x.st.code||'',x.st.name].concat(S.shifts.map(function(sh){return x.n[sh.id]||0;})).concat([x.n.F||0,Math.round(x.hours*100)/100,x.st.rate||0,Math.round(x.hours*(x.st.rate||0))]);}));
 }
-function ftAoa(rows){
-  return [['Mã NV','Họ tên','Ngày làm','Số ca','Nghỉ phép (ngày)','Định mức ngày/tuần','Lương tháng','Công chuẩn','Lương tạm tính']].concat(rows.map(function(x){var dd=Object.keys(x.dset).length;return [x.st.code||'',x.st.name,dd,x.shifts,x.leave,x.st.max,x.st.sal||0,ftStd(),ftPay(x.st,dd)];}));
-}
+function ftAoa(rows){return ftAoa2(rows,view.pay.from,view.pay.to);}
 function detailAoa(rows){
   var out=[['Mã NV','Họ tên','Ngày','Thứ','Ca','Vị trí','Giờ công']];
   rows.forEach(function(x){x.days.forEach(function(dd){var p=pos(dd.p);out.push([x.st.code||'',x.st.name,dm(dd.dk)+'/'+dd.dk.slice(0,4),DAYS[dow(dd.dk)],shiftLabel(dd.s),p?p.name:'',dd.h]);});});
@@ -2952,11 +2954,17 @@ function exportPay(){
     xSumRow(pt,t,'Tổng');
     for(var c=3;c<=cM;c++){if(c===cR)continue;var sc=pt.getCell(t,c);sc.value={formula:'SUM('+colL(c)+'2:'+colL(c)+last+')'};xBold(sc,c===cM?'#,##0':null);}
     pt.getCell(t+2,1).value='Ô vàng sửa được: đơn giá ở trang này, giờ công ở trang PT chi tiết theo ngày. Số ca, giờ công, thành tiền và dòng Tổng tự tính lại.';pt.getCell(t+2,1).font={name:'Arial',italic:true,color:{argb:XGREY}};
-    xHeader(ft,[['Mã NV',14],['Họ tên',24],['Ngày làm',10],['Số ca',8],['Nghỉ phép (ngày)',15],['Định mức ngày/tuần',16],['Lương tháng (đ)',16],['Công chuẩn',11],['Lương tạm tính (đ)',18]]);
-    r.ft.forEach(function(x,i){var dd=Object.keys(x.dset).length,rw=i+2;[key(x.st),x.st.name,dd,x.shifts,x.leave,x.st.max,x.st.sal||0,ftStd()].forEach(function(v,j){ft.getCell(rw,j+1).value=v;});
-      ['G','I'].forEach(function(cl){ft.getCell(cl+rw).numFmt='#,##0';});xFill(ft.getCell('G'+rw),XINPUT);xFill(ft.getCell('H'+rw),XINPUT);ft.getCell('I'+rw).value={formula:'IF(H'+rw+'=0,0,ROUND(G'+rw+'/H'+rw+'*C'+rw+',0))',result:ftPay(x.st,dd)};});
-    var ft2=r.ft.length+2;xSumRow(ft,ft2,'Tổng');['C','D','E','I'].forEach(function(cl){var sc=ft.getCell(cl+ft2);sc.value={formula:'SUM('+cl+'2:'+cl+Math.max(2,ft2-1)+')'};xBold(sc,cl==='I'?'#,##0':null);});
-    ft.getCell(ft2+2,1).value='Lương tạm tính = lương tháng ÷ công chuẩn × ngày làm theo lịch. Ô vàng sửa được.';ft.getCell(ft2+2,1).font={name:'Arial',italic:true,color:{argb:XGREY}};
+    /* PT làm ngày lễ: 2 cột thêm sau Thành tiền */
+    var hl=holIn(p.from,p.to);
+    if(hl.length){[['Giờ lễ',9],['Thêm ngày lễ (đ)',16],['Tổng (đ)',15]].forEach(function(c,j){var hc=pt.getCell(1,cM+1+j);hc.value=c[0];hc.font=pt.getCell(1,cM).font;hc.fill=pt.getCell(1,cM).fill;hc.alignment=pt.getCell(1,cM).alignment;pt.getColumn(cM+1+j).width=c[1];});
+      r.pt.forEach(function(x,i){var le=ptLe(x),row=i+2;pt.getCell(row,cM+1).value=le.h;var lv=pt.getCell(row,cM+2);lv.value=le.v;lv.numFmt='#,##0';var tv=pt.getCell(row,cM+3);tv.value={formula:colL(cM)+row+'+'+colL(cM+2)+row,result:Math.round(x.hours*(x.st.rate||0))+le.v};tv.numFmt='#,##0';});
+      [cM+1,cM+2,cM+3].forEach(function(c){var sc=pt.getCell(t,c);sc.value={formula:'SUM('+colL(c)+'2:'+colL(c)+last+')'};xBold(sc,c>cM+1?'#,##0':null);});
+      pt.getCell(t+3,1).value='Ngày lễ: '+hl.map(function(dk){return dm(dk)+' '+holName(dk);}).join(', ')+'. Làm ngày lễ trả '+Math.round(holK()*100)+'%: thêm '+Math.round((holK()-1)*100)+'% đơn giá mỗi giờ.';pt.getCell(t+3,1).font={name:'Arial',italic:true,color:{argb:XGREY}};}
+    var FA=ftAoa2(r.ft,p.from,p.to),W=[14,24,9,8,12,10,14,15,10,14,10,14,15];
+    xHeader(ft,FA[0].map(function(t0,j){return [t0,W[j]];}));
+    FA.slice(1).forEach(function(a,i){a.forEach(function(v,j){var c=ft.getCell(i+2,j+1);c.value=v;if(j>=6&&[6,7,9,11,12].indexOf(j)>=0)c.numFmt='#,##0';});xFill(ft.getCell(i+2,7),XINPUT);});
+    var ft2=FA.length+1;xSumRow(ft,ft2,'Tổng');[3,4,5,8,9,10,11,12,13].forEach(function(c){var sc=ft.getCell(ft2,c);sc.value={formula:'SUM('+colL(c)+'2:'+colL(c)+Math.max(2,ft2-1)+')'};xBold(sc,[8,10,12,13].indexOf(c)>=0?'#,##0':null);});
+    ft.getCell(ft2+2,1).value='Cách tính của site: '+ftRule()+'. Lương theo công = lương tháng ÷ công chuẩn × công (tối đa lương tháng). Ngày lễ không đi làm vẫn tính công; làm ngày lễ thêm '+Math.round(holK()*100)+'% lương ngày. Nhân viên site không có phép năm.';ft.getCell(ft2+2,1).font={name:'Arial',italic:true,color:{argb:XGREY}};
     return wb;
   },name);
 }
@@ -7089,7 +7097,8 @@ function ymName(ym){return 'T'+(+ym.slice(5,7))+'/'+ym.slice(0,4);}
 function costQ(){var c=HR.cq;if(!c){var n=new Date();c=HR.cq={y:n.getFullYear(),q:Math.floor(n.getMonth()/3)+1};}return c;}
 function costMonths(c){var out=[];for(var i=0;i<3;i++){var m=(c.q-1)*3+i+1;out.push(c.y+'-'+(m<10?'0':'')+m);}return out;}
 /* lương PT + FT theo lịch trong khoảng ngày */
-function costPay(x,a,b){return withSite(x.s,function(){var r=payroll(a,b),pt=0,ft=0,nos=0;r.pt.forEach(function(y){pt+=y.hours*(y.st.rate||0);});r.ft.forEach(function(y){ft+=ftPay(y.st,Object.keys(y.dset).length);if(!y.st.sal&&y.shifts)nos++;});return {pt:Math.round(pt),ft:ft,nos:nos,sched:countDays(a,b)-r.empty};});}
+/* 31/10: PT gồm tiền làm ngày lễ, FT theo cách tính của từng site (luongft.js) */
+function costPay(x,a,b){return withSite(x.s,function(){var r=payroll(a,b),L=payLockOf(payYm(a,b));if(L)return {pt:L.tot.pt+L.tot.ptLe,ft:L.tot.ft,nos:0,sched:countDays(a,b)-r.empty,lock:1};var T=payTotals(r,a,b);return {pt:T.pt+T.ptLe,ft:T.ft,nos:T.nos,sched:countDays(a,b)-r.empty};});}
 /* số liệu 1 site trong 1 tháng */
 function costMonth(x,ym){
   var R=ymRange(ym),nd=countDays(R.from,R.to),tk=todayKey(),past=R.to<tk,future=R.from>tk;
@@ -7105,7 +7114,7 @@ function costPct(v,b){if(v==null)return '<span class="muted">Chưa có lịch</s
 function costBar(v,b){if(!b||v==null)return '';var p=v/b*100;return '<div class="cbar" title="'+fmtPct(p)+' ngân sách"><i class="'+(p>100?'ov':p>95?'nr':'')+'" style="width:'+Math.min(100,p/1.2)+'%"></i><b style="left:'+(100/1.2)+'%"></b></div>';}
 function costSum(list){var t={pt:0,ft:0,ot:0,otWait:0,spent:0,spentPt:0,spentFt:0,spentOt:0,est:0,bud:0,budNow:0,hasEst:false,nos:0,el:0,nd:0};list.forEach(function(o){['pt','ft','ot','otWait','spent','spentPt','spentFt','spentOt','budNow'].forEach(function(k){t[k]+=o[k];});t.bud+=o.bud.v;if(o.est!=null){t.est+=o.est;t.hasEst=true;}t.nos+=o.ftNoSal;});if(!t.hasEst)t.est=null;return t;}
 function renderCost(){
-  budLoad();
+  budLoad();holLoad();
   var L=hrPicked(),all=hrSites(),c=costQ(),M=costMonths(c),otOk=hrdReady(all);
   var h=hrTop(ROLE==='mgr'?'Tài khoản quản lý chuỗi':'Cửa hàng trưởng','Lương & ngân sách');
   h+='<div class="hrctl"><label class="fl">Năm<select class="in" data-cost="y">'+[c.y-1,c.y,c.y+1].map(function(y){return '<option'+(y===c.y?' selected':'')+'>'+y+'</option>';}).join('')+'</select></label>'
@@ -7147,7 +7156,7 @@ function renderCost(){
         +'<td class="n mo">'+(s.budNow?costPct(s.spent,s.budNow):'—')+'</td><td class="n"><b>'+(s.est==null?'—':fmtVND(s.est))+'</b></td><td class="n">'+fmtVND(s.bud)+'</td><td class="n">'+costPct(s.est,s.bud)+'</td></tr>';});
     h+='</tbody><tfoot><tr><td>Cả chuỗi</td>'+byM.map(function(t){return '<td class="n mo">'+(t.est==null?'—':fmtVND(t.est))+'<br><span class="sm">/ '+fmtVND(t.bud)+'</span></td>';}).join('')+'<td class="n mo">'+(Q.budNow?costPct(Q.spent,Q.budNow):'—')+'</td><td class="n">'+(Q.est==null?'—':fmtVND(Q.est))+'</td><td class="n">'+fmtVND(Q.bud)+'</td><td class="n">'+costPct(Q.est,Q.bud)+'</td></tr></tfoot></table></div></section>';
   }
-  h+=renderBudget(all,M,c);
+  h+=renderBudget(all,M,c)+renderHol();
   return h;
 }
 function renderBudget(all,M,c){
@@ -7183,6 +7192,156 @@ $app.addEventListener('change',function(e){
   if(ds.cost==='y'){costQ().y=+t.value;BUD.edit=null;render();return;}
   if(ds.bud&&BUD.edit){var p=ds.bud.split('|'),v=Math.round(parseNum(t.value));if(isNaN(v))v=0;(BUD.edit[p[0]]||(BUD.edit[p[0]]={}))[p[1]]=Math.max(0,v);render();}
 });
+
+/* ---------- Lương FT theo cách của từng site + lương ngày lễ (31/10/2026, Phúc) ----------
+   FT ăn lương tháng, nghỉ theo số ngày quy định; nhân viên site KHÔNG có phép năm (chỉ core team có): ngày nghỉ, kể cả đơn nghỉ phép, không tính công.
+   Mỗi site một cách (S.ftc, quản lý chuỗi cài):
+     công chuẩn: cố định (S.ftStd, mặc định 26) hoặc theo tháng = số ngày trong tháng − số ngày nghỉ quy định (ftc.off, mặc định 4);
+     công 1 ngày: có ca = 1 công (ftc.cong 'day') hoặc theo giờ = giờ làm ÷ giờ chuẩn/ngày, tối đa 1 (ftc.cong 'hour', ftc.dayH);
+     công vượt chuẩn (chỉ xét khi xem trọn tháng): trả lương ngày × hệ số ftc.over (mặc định 2 = 200%, làm vào ngày nghỉ hằng tuần,
+     BLLĐ 2019 Điều 98); 0 = không trả tiền, cho nghỉ bù. Lương trong chuẩn không vượt lương tháng.
+   Ngày lễ (cfg/holidays: {d:{'YYYY-MM-DD':tên}, k:hệ số}, quản lý chuỗi sửa ở Lương & ngân sách, áp dụng mọi site). Điều 98: làm ngày lễ ít nhất 300%.
+     PT: trả thêm giờ lễ × đơn giá × (hệ số − 1), vì 100% đã nằm trong giờ công.
+     FT: ngày lễ là ngày nghỉ có lương (Điều 112): không đi làm vẫn tính 1 công; đi làm thì công ngày đó + thêm công × lương ngày × hệ số. */
+var HOL={d:null,k:3,loaded:false,busy:false,edit:null};
+var HOL_DEF={'2026-01-01':'Tết Dương lịch','2026-04-30':'Ngày Chiến thắng','2026-05-01':'Quốc tế Lao động','2026-09-02':'Quốc khánh',
+  '2027-01-01':'Tết Dương lịch','2027-04-30':'Ngày Chiến thắng','2027-05-01':'Quốc tế Lao động','2027-09-02':'Quốc khánh'};
+function holLoad(){if(HOL.loaded||HOL.busy||!DB)return;HOL.busy=true;DB.doc('cfg/holidays').get().then(function(sn){var x=sn.exists?sn.data():{};HOL.d=x.d||null;if(x.k)HOL.k=+x.k;HOL.loaded=true;HOL.busy=false;render();},function(){HOL.loaded=true;HOL.busy=false;});}
+function holDays(){return HOL.d||HOL_DEF;}
+function holName(dk){return holDays()[dk]||'';}
+function holK(){return +HOL.k||3;}
+function holIn(from,to){var L=[];eachDate(from,to,function(dk){if(holName(dk))L.push(dk);});return L;}
+function ftc(){return (S&&S.ftc)||{};}
+function ftStdOf(ym){var c=ftc();if(c.std==='month'){var y=+ym.slice(0,4),m=+ym.slice(5,7);return new Date(y,m,0).getDate()-(c.off!=null?+c.off:4);}return +S.ftStd||26;}
+function ftDayH(){return +ftc().dayH||8;}
+function ftOverK(){var c=ftc();return c.over!=null?+c.over:2;}
+function ftCongDay(h){return ftc().cong==='hour'?Math.min(1,Math.round(h/ftDayH()*100)/100):(h>0?1:0);}
+function ftRule(){var c=ftc();return 'Công chuẩn '+(c.std==='month'?'= ngày trong tháng − '+(c.off!=null?c.off:4)+' ngày nghỉ':'cố định '+(+S.ftStd||26))+' · 1 ngày '+(c.cong==='hour'?'= giờ làm ÷ '+fmtH(ftDayH())+' giờ (tối đa 1 công)':'có ca = 1 công')+' · công vượt chuẩn '+(ftOverK()?'trả '+Math.round(ftOverK()*100)+'% lương ngày':'cho nghỉ bù, không trả tiền');}
+/* x: dòng FT của payroll(from,to) */
+function ftCalc(x,from,to){
+  var st=x.st,sal=+st.sal||0,hd={},seg={},o={cong:0,work:0,lePaid:0,leWork:0,std:0,base:0,over:0,overC:0,le:0,partial:false};
+  x.days.forEach(function(d){hd[d.dk]=(hd[d.dk]||0)+(+d.h||0);});
+  eachDate(from,to,function(dk){
+    if((st.start&&dk<st.start)||!employed(st,dk))return;
+    var ym=dk.slice(0,7),g=seg[ym]||(seg[ym]={c:0,n:0,le:0}),w=x.dset[dk]?ftCongDay(hd[dk]||0):0;g.n++;if(x.dset[dk])o.work++;
+    if(holName(dk)){if(w){g.le+=w;o.leWork+=w;}else{w=1;o.lePaid++;}}
+    g.c+=w;
+  });
+  Object.keys(seg).forEach(function(ym){
+    var g=seg[ym],R=ymRange(ym),nd=countDays(R.from,R.to),std=ftStdOf(ym),wage=std>0?sal/std:0,full=from<=R.from&&to>=R.to&&g.n===nd;
+    o.cong+=g.c;o.std+=full?std:Math.round(std*g.n/nd*10)/10;if(!full)o.partial=true;
+    if(full&&g.c>std){o.base+=sal;o.overC+=g.c-std;o.over+=(g.c-std)*wage*ftOverK();}else o.base+=g.c*wage;
+    o.le+=g.le*wage*holK();
+  });
+  o.base=Math.round(o.base);o.over=Math.round(o.over);o.le=Math.round(o.le);o.cong=Math.round(o.cong*100)/100;o.total=o.base+o.over+o.le;
+  return o;
+}
+function ptLe(x){var h=0;x.days.forEach(function(d){if(holName(d.dk))h+=+d.h||0;});return {h:h,v:Math.round(h*(x.st.rate||0)*(holK()-1))};}
+/* tổng lương PT, FT của 1 khoảng (dùng ở Công & giờ công và Lương & ngân sách) */
+function payTotals(r,from,to){var t={pt:0,ptLe:0,ft:0,ftLe:0,ftOver:0,nos:0};
+  r.pt.forEach(function(x){t.pt+=x.hours*(x.st.rate||0);t.ptLe+=ptLe(x).v;});
+  r.ft.forEach(function(x){var c=ftCalc(x,from,to);t.ft+=c.total;t.ftLe+=c.le;t.ftOver+=c.over;if(!x.st.sal&&x.shifts)t.nos++;});
+  t.pt=Math.round(t.pt);return t;}
+
+/* ---------- phần FT trên tab Công & giờ công ---------- */
+function ftPanel(r,from,to){
+  var adm=costAdmin(),c=ftc(),hl=holIn(from,to);
+  var h='<div><h3 class="sub">FT · công và lương tháng</h3><p class="sm muted">Lương = lương tháng ÷ công chuẩn × công (tối đa lương tháng) + công vượt chuẩn + tiền làm ngày lễ. Nhân viên site không có phép năm: ngày nghỉ không tính công. Ngày lễ không đi làm vẫn tính 1 công. Lương tháng chưa gồm BHXH.</p>'
+    +'<p class="sm"><b>Cách tính của site:</b> '+esc(ftRule())+'.'+(adm?'':' <span class="muted">Quản lý chuỗi cài cách tính.</span>')+'</p>';
+  if(adm)h+='<div class="ftcfg"><label class="fl">Công chuẩn<select class="in" data-ftc="std"><option value="fixed"'+(c.std!=='month'?' selected':'')+'>Cố định mỗi tháng</option><option value="month"'+(c.std==='month'?' selected':'')+'>Ngày trong tháng − ngày nghỉ quy định</option></select></label>'
+    +(c.std==='month'?'<label class="fl">Ngày nghỉ quy định/tháng<input class="in num" inputmode="numeric" data-ftc="off" value="'+(c.off!=null?c.off:4)+'"></label>':'<label class="fl">Số công chuẩn<input class="in num" inputmode="numeric" data-ftc="fixedn" value="'+(+S.ftStd||26)+'"></label>')
+    +'<label class="fl">Tính công 1 ngày<select class="in" data-ftc="cong"><option value="day"'+(c.cong!=='hour'?' selected':'')+'>Có ca là 1 công</option><option value="hour"'+(c.cong==='hour'?' selected':'')+'>Theo giờ làm</option></select></label>'
+    +(c.cong==='hour'?'<label class="fl">Giờ chuẩn/ngày<input class="in num" inputmode="decimal" data-ftc="dayH" value="'+fmtH(ftDayH())+'"></label>':'')
+    +'<label class="fl">Công vượt chuẩn trả<select class="in" data-ftc="over">'+[[0,'0% (nghỉ bù)'],[1,'100%'],[1.5,'150%'],[2,'200% (ngày nghỉ tuần)'],[3,'300%']].map(function(v){return '<option value="'+v[0]+'"'+(ftOverK()===v[0]?' selected':'')+'>'+v[1]+'</option>';}).join('')+'</select></label></div>';
+  if(hl.length)h+='<p class="sm">Ngày lễ trong kỳ: <b>'+hl.map(function(dk){return dm(dk)+' '+esc(holName(dk));}).join(', ')+'</b> · làm ngày lễ trả '+Math.round(holK()*100)+'%.</p>';
+  h+='</div><div class="tblwrap"><table class="tbl"><thead><tr><th>Mã NV</th><th>Họ tên</th><th class="n">Ngày làm</th><th class="n">Công</th><th class="n">Công chuẩn</th><th class="n">Lương tháng</th><th class="n">Lương theo công</th><th class="n">Vượt chuẩn</th><th class="n">Làm ngày lễ</th><th class="n">Tổng (đ)</th></tr></thead><tbody>';
+  if(!r.ft.length)h+='<tr><td colspan="10" class="emptyrow">Không có nhân viên FT.</td></tr>';
+  var T={base:0,over:0,le:0,total:0},part=false;
+  r.ft.forEach(function(x){var o=ftCalc(x,from,to);T.base+=o.base;T.over+=o.over;T.le+=o.le;T.total+=o.total;if(o.partial)part=true;
+    h+='<tr><td class="mono">'+esc(x.st.code||'—')+'</td><td>'+esc(x.st.name)+(act(x.st)?'':' <span class="pill no">Đã nghỉ</span>')+'</td><td class="n">'+o.work+'</td><td class="n"><b>'+fmtH(o.cong)+'</b>'+(o.lePaid?'<br><span class="sm muted">gồm '+o.lePaid+' lễ nghỉ</span>':'')+'</td><td class="n">'+fmtH(o.std)+'</td>'
+      +'<td class="n"><input class="in rate sal" inputmode="numeric" id="fsal-'+x.st.id+'" data-f="ssal" data-id="'+x.st.id+'" value="'+(x.st.sal?fmtVND(x.st.sal):'')+'" placeholder="đ/tháng" aria-label="Lương tháng của '+esc(x.st.name)+'"></td>'
+      +'<td class="n">'+fmtVND(o.base)+'</td><td class="n">'+(o.overC?fmtH(o.overC)+' công · '+fmtVND(o.over):'—')+'</td><td class="n">'+(o.leWork?fmtH(o.leWork)+' công · '+fmtVND(o.le):'—')+'</td><td class="n"><b>'+fmtVND(o.total)+'</b></td></tr>';});
+  if(r.ft.length)h+='</tbody><tfoot><tr><td colspan="6">Tổng lương FT</td><td class="n">'+fmtVND(T.base)+'</td><td class="n">'+fmtVND(T.over)+'</td><td class="n">'+fmtVND(T.le)+'</td><td class="n">'+fmtVND(T.total)+'</td></tr></tfoot>';else h+='</tbody>';
+  h+='</table></div>';
+  if(part&&r.ft.length)h+='<p class="sm muted">Kỳ đang xem không trọn tháng: công chuẩn tính theo tỷ lệ ngày, chưa xét vượt chuẩn. Chọn Tháng này / Tháng trước để ra lương tháng.</p>';
+  return h;
+}
+function ftAoa2(rows,from,to){
+  return [['Mã NV','Họ tên','Ngày làm','Công','Ngày lễ nghỉ (tính công)','Công chuẩn','Lương tháng','Lương theo công','Công vượt chuẩn','Tiền vượt chuẩn','Công làm ngày lễ','Tiền làm ngày lễ','Tổng']].concat(rows.map(function(x){var o=ftCalc(x,from,to);
+    return [x.st.code||'',x.st.name,o.work,o.cong,o.lePaid,o.std,x.st.sal||0,o.base,o.overC,o.over,o.leWork,o.le,o.total];}));
+}
+$app.addEventListener('change',function(e){
+  var t=e.target,k=t.dataset&&t.dataset.ftc;if(!k||!S)return;if(!costAdmin()){toast('Quản lý chuỗi cài cách tính lương FT.');return;}
+  var c=S.ftc||(S.ftc={}),v=parseFloat(String(t.value).replace(',','.'));
+  if(k==='std')c.std=t.value==='month'?'month':'fixed';else if(k==='cong')c.cong=t.value==='hour'?'hour':'day';
+  else if(k==='off'){if(v>=0&&v<=10)c.off=v;}else if(k==='dayH'){if(v>0&&v<=12)c.dayH=v;}else if(k==='over'){if(v>=0&&v<=4)c.over=v;}
+  else if(k==='fixedn'){if(v>=20&&v<=31)S.ftStd=Math.round(v);}
+  markDirty();render();
+});
+
+/* ---------- chốt lương tháng (31/10, Phúc) ----------
+   Quản lý chuỗi chốt khi xem trọn 1 tháng ở Công & giờ công: lưu bản số liệu vào S.payLock['YYYY-MM'] (PT, FT, tổng, cách tính, hệ số lễ).
+   Tháng đã chốt: Công & giờ công và Lương & ngân sách dùng số đã chốt, không đổi khi sửa lịch, đơn giá, lương, hệ số lễ, cách tính FT.
+   Lịch vẫn sửa được (tuần đã qua tự khoá như cũ); nếu số tính lại khác số đã chốt thì báo chênh lệch. Muốn cập nhật: Mở chốt rồi chốt lại. */
+var PT_HEAD=['Mã NV','Họ tên','Giờ công','Đơn giá/giờ','Thành tiền','Giờ lễ','Thêm ngày lễ','Tổng'];
+function payYm(from,to){if(!from||!to||from.slice(8)!=='01'||from.slice(0,7)!==to.slice(0,7))return '';return to===ymRange(from.slice(0,7)).to?from.slice(0,7):'';}
+function payLockOf(ym){return (ym&&S&&S.payLock&&S.payLock[ym])||null;}
+function paySnap(ym){
+  var R=ymRange(ym),r=payroll(R.from,R.to),T=payTotals(r,R.from,R.to);
+  return {by:meName(),at:new Date().toISOString(),rule:ftRule(),k:holK(),hol:holIn(R.from,R.to).map(function(dk){return dm(dk)+' '+holName(dk);}),
+    pt:r.pt.map(function(x){var le=ptLe(x),m=Math.round(x.hours*(x.st.rate||0));return [x.st.code||'',x.st.name,Math.round(x.hours*100)/100,x.st.rate||0,m,le.h,le.v,m+le.v];}),
+    ft:ftAoa2(r.ft,R.from,R.to).slice(1),tot:{pt:T.pt,ptLe:T.ptLe,ft:T.ft}};
+}
+function payLockBtn(ym){
+  if(!ym||payLockOf(ym)||!costAdmin())return '';
+  return '<div class="row"><button class="btn sm" data-act="paylock" data-id="'+ym+'">'+(view.confirm==='paylock:'+ym?'Bấm lần nữa để chốt '+ymName(ym):lockIcon()+' Chốt lương '+ymName(ym))+'</button><span class="sm muted">Chốt xong, số lương tháng này giữ nguyên dù sửa lịch, đơn giá hay hệ số lễ.</span></div>';
+}
+function payLockView(ym,L,r,from,to){
+  var T=payTotals(r,from,to),now=T.pt+T.ptLe+T.ft,was=L.tot.pt+L.tot.ptLe+L.tot.ft,df=now-was;
+  var tbl=function(head,rows,money){return '<div class="tblwrap"><table class="tbl"><thead><tr>'+head.map(function(t,j){return '<th'+(j>1?' class="n"':'')+'>'+esc(t)+'</th>';}).join('')+'</tr></thead><tbody>'
+    +(rows.length?rows.map(function(a){return '<tr>'+a.map(function(v,j){return '<td'+(j>1?' class="n"':j===0?' class="mono"':'')+'>'+(j<2?esc(v):money.indexOf(j)>=0?fmtVND(v):fmtH(v))+'</td>';}).join('')+'</tr>';}).join(''):'<tr><td colspan="'+head.length+'" class="emptyrow">Không có.</td></tr>')+'</tbody></table></div>';};
+  var h='<div class="lockbar on"><span>'+lockIcon()+' <b>Đã chốt lương '+ymName(ym)+'</b> lúc '+esc(fmtTime(L.at))+(L.by?' · '+esc(L.by):'')+'. Số dưới đây là số đã chốt.</span></div>';
+  if(Math.abs(df)>=1)h+='<div class="req-w soft">Lịch / đơn giá / lương hiện tại tính ra <b>'+fmtVND(now)+' đ</b>, '+(df>0?'cao':'thấp')+' hơn số đã chốt <b>'+fmtVND(Math.abs(df))+' đ</b>. '+(costAdmin()?'Muốn cập nhật: Mở chốt rồi chốt lại.':'Báo quản lý chuỗi nếu cần chốt lại.')+'</div>';
+  h+='<div class="kpis"><div class="kpi"><b>'+fmtVND(L.tot.pt)+'</b><span>lương PT theo giờ (đ)</span></div>'+(L.tot.ptLe?'<div class="kpi"><b>'+fmtVND(L.tot.ptLe)+'</b><span>PT làm ngày lễ (đ)</span></div>':'')+'<div class="kpi"><b>'+fmtVND(L.tot.ft)+'</b><span>lương FT (đ)</span></div><div class="kpi"><b>'+fmtVND(was)+'</b><span>tổng đã chốt (đ)</span></div></div>';
+  h+='<h3 class="sub">PT</h3>'+tbl(PT_HEAD,L.pt,[3,4,6,7]);
+  h+='<h3 class="sub">FT</h3><p class="sm muted">Cách tính lúc chốt: '+esc(L.rule)+'.'+(L.hol&&L.hol.length?' Ngày lễ: '+esc(L.hol.join(', '))+' · hệ số '+Math.round(L.k*100)+'%.':'')+'</p>'+tbl(ftAoa2([],from,to)[0],L.ft,[6,7,9,11,12]);
+  h+='<div class="row"><button class="btn primary" data-act="paylockxlsx" data-id="'+ym+'">Tải Excel số đã chốt</button><button class="btn" data-act="paylive">Xem số tính theo lịch hiện tại</button>'+(costAdmin()?cbtn('payunlock:'+ym,'Mở chốt','Bấm lần nữa để mở chốt','ghost danger'):'')+'</div>';
+  return h;
+}
+function payLockXlsx(ym){
+  var L=payLockOf(ym);if(!L)return;
+  withExcel(function(EJ){var wb=new EJ.Workbook();wb.creator=TITLE;var W=[14,24,10,12,14,8,14,15],t='Lương '+ymName(ym)+' đã chốt · '+(S.site||'')+' · '+fmtTime(L.at)+(L.by?' · '+L.by:'');
+    xfSheet(wb,'PT đã chốt',PT_HEAD.map(function(h0,j){return [h0,W[j],j>=2?(j===3||j===4||j>=6?'m':'n'):''];}),L.pt,t);
+    var FH=ftAoa2([],view.pay.from,view.pay.to)[0];xfSheet(wb,'FT đã chốt',FH.map(function(h0,j){return [h0,j<2?(j?24:14):13,j<2?'':([6,7,9,11,12].indexOf(j)>=0?'m':'n')];}),L.ft,t+' · '+L.rule);
+    return wb;},'Luong_da_chot_'+siteSlug()+'_'+ym+'.xlsx');
+}
+
+/* ---------- ngày lễ: quản lý chuỗi sửa ở Lương & ngân sách ---------- */
+function renderHol(){
+  holLoad();var adm=costAdmin(),ed=HOL.edit,d=holDays(),ks=Object.keys(d).sort();
+  var h='<details class="panel fold"><summary><h2>Ngày lễ &amp; lương ngày lễ</h2></summary><p class="sm">Áp dụng mọi site. Làm ngày lễ trả <b>'+Math.round(holK()*100)+'%</b> (BLLĐ 2019 Điều 98: ít nhất 300%). PT: thêm '+Math.round((holK()-1)*100)+'% đơn giá cho giờ làm ngày lễ. FT: ngày lễ là ngày nghỉ có lương; đi làm thì thêm '+Math.round(holK()*100)+'% lương ngày.'
+    +(HOL.d?'':' <b>Đang dùng danh sách mặc định</b> (lễ dương lịch).')+' Tết Nguyên đán, Giỗ Tổ Hùng Vương và ngày nghỉ kèm Quốc khánh theo âm lịch / thông báo hằng năm: thêm khi có lịch nghỉ chính thức.</p>';
+  if(ed)h+='<label class="fl wide">Mỗi dòng 1 ngày: ngày/tháng/năm, tên ngày lễ<textarea class="in" rows="10" data-hol="list">'+esc(ed.list)+'</textarea></label><label class="fl">Hệ số làm ngày lễ<input class="in num" inputmode="decimal" data-hol="k" value="'+esc(ed.k)+'"></label>'
+    +'<div class="row"><button class="btn primary" data-act="holsave"'+(HOL.busy?' disabled':'')+'>Lưu ngày lễ</button><button class="btn ghost" data-act="holcancel">Huỷ</button></div>';
+  else h+='<div class="tblwrap"><table class="tbl"><thead><tr><th>Ngày</th><th>Thứ</th><th>Ngày lễ</th></tr></thead><tbody>'+ks.map(function(k){return '<tr><td class="mono">'+k.slice(8)+'/'+k.slice(5,7)+'/'+k.slice(0,4)+'</td><td>'+DAYS[dow(k)]+'</td><td>'+esc(d[k])+'</td></tr>';}).join('')+'</tbody></table></div>'
+    +(adm?'<div class="row"><button class="btn" data-act="holedit">'+lockIcon()+' Sửa ngày lễ</button></div>':'');
+  return h+'</details>';
+}
+function holParse(txt){var d={},bad=[];String(txt||'').split(/\n/).forEach(function(l){l=l.trim();if(!l)return;var m=l.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})\s*[,;:\-–·]?\s*(.*)$/);if(!m){bad.push(l);return;}
+  var k=m[3]+'-'+(m[2].length<2?'0':'')+m[2]+'-'+(m[1].length<2?'0':'')+m[1];d[k]=m[4]||'Ngày lễ';});return {d:d,bad:bad};}
+$app.addEventListener('click',function(e){
+  var b=e.target.closest('[data-act]');if(!b||view.mod!=='cost')return;var a=b.dataset.act;
+  if(a==='holedit'&&costAdmin()){var d=holDays();HOL.edit={list:Object.keys(d).sort().map(function(k){return k.slice(8)+'/'+k.slice(5,7)+'/'+k.slice(0,4)+', '+d[k];}).join('\n'),k:String(holK())};render();}
+  else if(a==='holcancel'){HOL.edit=null;render();}
+  else if(a==='holsave'&&costAdmin()&&HOL.edit&&DB){
+    var p=holParse(HOL.edit.list),k=parseFloat(String(HOL.edit.k).replace(',','.'));
+    if(p.bad.length){toast('Dòng chưa đúng dạng ngày/tháng/năm, tên: '+p.bad.slice(0,3).join(' | '),9000);return;}
+    if(!(k>=1&&k<=5)){toast('Hệ số từ 1 đến 5 (300% là 3).');return;}
+    HOL.busy=true;render();
+    DB.doc('cfg/holidays').set({d:p.d,k:k,by:meName(),at:new Date().toISOString()}).then(function(){HOL.d=p.d;HOL.k=k;HOL.edit=null;HOL.busy=false;render();toast('Đã lưu ngày lễ.');},function(er){HOL.busy=false;render();toast((er&&er.message)||'Chưa lưu được, thử lại.',7000);});
+  }
+});
+$app.addEventListener('input',function(e){var t=e.target,k=t.dataset&&t.dataset.hol;if(k&&HOL.edit)HOL.edit[k]=t.value;});
 
 /* ================= ĐỀ XUẤT TĂNG LƯƠNG / ĐỔI VỊ TRÍ GỬI GIÁM ĐỐC (31/10/2026, Phúc) =================
    Có ở 2 nơi, cùng 1 cách làm:
@@ -7924,7 +8083,7 @@ $app.addEventListener('input',function(e){
 });
 
 /* ---------- vẽ trang ---------- */
-var RO_OK={dcopen:1,xctab:1,grp:1,mod:1,hrprof:1,unlock:1,relock:1,lockweek:1,unlockweek:1,staffsched:1,misaweek:1,misaxlsx:1,tab:1,prev:1,next:1,today:1,payweek:1,paymonth:1,kpweek:1,kpmonth:1,kpxlsx:1,payxlsx:1,paycopy:1,payft:1,paydetail:1,kpcopy:1,swf:1,mgrback:1,whylocal:1,exportsetup:1,regfile:1,retrysave:1};
+var RO_OK={paylive:1,paylockxlsx:1,paylock:1,payunlock:1,dcopen:1,xctab:1,grp:1,mod:1,hrprof:1,unlock:1,relock:1,lockweek:1,unlockweek:1,staffsched:1,misaweek:1,misaxlsx:1,tab:1,prev:1,next:1,today:1,payweek:1,paymonth:1,kpweek:1,kpmonth:1,kpxlsx:1,payxlsx:1,paycopy:1,payft:1,paydetail:1,kpcopy:1,swf:1,mgrback:1,whylocal:1,exportsetup:1,regfile:1,retrysave:1};
 function lockReadonly(){
   var els=$app.querySelectorAll('input,select,textarea,button');
   for(var i=0;i<els.length;i++){var el=els[i],ds=el.dataset||{};if(ds.pay||ds.kp||ds.kpinc||ds.flt||ds.xf)continue;if(el.tagName==='BUTTON'&&RO_OK[ds.act])continue;if(el.closest('.mnav,.subnav'))continue;el.disabled=true;} /* 31/10: không khoá menu, để vẫn chuyển được mục */
@@ -8194,7 +8353,7 @@ function bindImport(m){
 }
 
 /* ---------- thao tác ---------- */
-var CONFIRM={unlockweek:1,fixfromreg:1,copyprev:1,clear:1,delstaff:1,delpos:1,clearsample:1,undo:1,lcancel:1,regclear:1,swundo:1,delshift:1,quit:1};
+var CONFIRM={paylock:1,payunlock:1,unlockweek:1,fixfromreg:1,copyprev:1,clear:1,delstaff:1,delpos:1,clearsample:1,undo:1,lcancel:1,regclear:1,swundo:1,delshift:1,quit:1};
 $app.addEventListener('click',function(e){
   var b=e.target.closest('[data-act]'),act=b?b.dataset.act:null;
   var key=b?act+(b.dataset.id?':'+b.dataset.id:''):null;
@@ -8329,6 +8488,15 @@ $app.addEventListener('click',function(e){
       else{var nmv=no&&no.value.trim();if(!nmv){toast('Nhập tên site.');break;}createSite(nmv,'');}
       break;
     case 'dcopen':dcPick();break;
+    case 'paylive':view.payLive=!view.payLive;render();break;
+    case 'paylockxlsx':payLockXlsx(b.dataset.id);break;
+    case 'paylock':case 'payunlock':
+      if(!costAdmin()){toast('Chỉ quản lý chuỗi chốt / mở chốt lương.');break;}
+      if(view.confirm!==key){view.confirm=key;render();break;}
+      view.confirm=null;var pym2=b.dataset.id;S.payLock=S.payLock||{};
+      if(act==='paylock'){S.payLock[pym2]=paySnap(pym2);view.payLive=false;toast('Đã chốt lương '+ymName(pym2)+'.');}
+      else{delete S.payLock[pym2];toast('Đã mở chốt '+ymName(pym2)+'. Số lương tính lại theo lịch hiện tại.');}
+      markDirty();render();break;
     case 'payweek':view.pay.from=view.week;view.pay.to=addDays(view.week,6);render();break;
     case 'paymonth':
       var now=new Date(),first=new Date(now.getFullYear(),now.getMonth()+(+b.dataset.v),1),last=new Date(first.getFullYear(),first.getMonth()+1,0);
@@ -8356,7 +8524,7 @@ $app.addEventListener('input',function(e){
   else if(f==='sname'){s=staffById(ds.id);if(s)s.name=t.value;}
   else if(f==='scode'){s=staffById(ds.id);if(s)s.code=t.value.trim();}
   else if(f==='smax'){if(t.value==='')return;s=staffById(ds.id);v=Math.max(0,parseInt(t.value,10)||0);if(s)s.max=v;}
-  else if(f==='ssal'){s=staffById(ds.id);if(!s)return;s.sal=parseInt(String(t.value).replace(/[^\d]/g,''),10)||0;if(!s.sal)delete s.sal;var fm=$app.querySelector('[data-ftmoney="'+ds.id+'"]');if(fm)fm.textContent=fmtVND(ftPay(s,+fm.dataset.days||0));}
+  else if(f==='ssal'){s=staffById(ds.id);if(!s)return;s.sal=parseInt(String(t.value).replace(/[^\d]/g,''),10)||0;if(!s.sal)delete s.sal;if(view.tab==='pay')setTimeout(render,0);}
   else if(f==='ftstd'){v=parseInt(t.value,10);if(!(v>=20&&v<=31))return;S.ftStd=v;}
   else if(f==='srate'){
     s=staffById(ds.id);if(!s)return;s.rate=parseInt(String(t.value).replace(/[^\d]/g,''),10)||0;
