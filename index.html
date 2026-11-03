@@ -1343,7 +1343,7 @@ body{margin:0}
 @media (max-width:600px){.ab-in{padding:6px 16px}.ab-brand small,.ab-chip span{display:none}.ab-chip{padding:3px}.ab-chip svg{display:none}}
 </style>
 <div id="xc-login" class="xc-login" hidden></div>
-<script id="xc-shim">window.XC_BUILD='2026-11-02 17:43';
+<script id="xc-shim">window.XC_BUILD='2026-11-03 15:32';
 (function(){
 'use strict';
 var TOKEN_KEY='xc_token';
@@ -4259,21 +4259,21 @@ function hrWorkbook(EJ,L,from,to){
   function put(ws,r,vals){vals.forEach(function(v,j){var c=ws.getCell(r,j+1);c.value=v;if(v instanceof Date)c.numFmt='dd/mm/yyyy';});}
   /* 1. Tổng hợp */
   var ws=wb.addWorksheet('Tổng hợp');
-  title(ws,'BÁO CÁO NHÂN SỰ',[['Site',32],['CHT',22],['Đầu kỳ',9],['Vào làm',9],['Nghỉ việc',9],['Cuối kỳ',9],['Tỷ lệ nghỉ việc',11],['Đang làm FT',10],['Đang làm PT',10],['Đa vị trí (≥2)',10],['Chưa có ngày vào làm',12],['Giờ công FT',11],['Giờ công PT',11],['Lương PT ước tính (đ)',15],['Đáp ứng định biên kỳ',12]]);
+  title(ws,'BÁO CÁO NHÂN SỰ',[['Site',32],['CHT',22],['Đầu kỳ',9],['Vào làm',9],['Nghỉ việc',9],['Cuối kỳ',9],['Tỷ lệ nghỉ việc',11],['Đang làm FT',10],['Đang làm PT',10],['Đa vị trí (≥2)',10],['Chưa có ngày vào làm',12],['Giờ công FT',11],['Giờ công PT',11],['Lương PT ước tính (đ)',15],['Lương FT ước tính (đ)',15],['Đáp ứng định biên kỳ',12]]);
   var r=5;
   L.forEach(function(x){
-    var f=flowStats(x.s.staff,from,to),k=withSite(x.s,function(){var pr=payroll(from,to),fh=0,ph=0,pm=0;pr.ft.forEach(function(y){fh+=y.hours;});pr.pt.forEach(function(y){ph+=y.hours;pm+=y.hours*(y.st.rate||0);});var R=kpiCalc(from,to,false);return {fh:fh,ph:ph,pm:pm,R:R};});
+    var f=flowStats(x.s.staff,from,to),k=withSite(x.s,function(){var pr=payroll(from,to),fh=0,ph=0,pm=0,fm=0;pr.ft.forEach(function(y){fh+=y.hours;fm+=ftCalc(y,from,to).total;});pr.pt.forEach(function(y){ph+=y.hours;pm+=y.hours*(y.st.rate||0);});var R=kpiCalc(from,to,false);return {fh:fh,ph:ph,pm:pm,fm:fm,R:R};});
     put(ws,r,[x.name,x.cht,f.head0,f.ins.length,f.outs.length]);
     ws.getCell(r,6).value={formula:'C'+r+'+D'+r+'-E'+r,result:f.end};
     ws.getCell(r,7).value={formula:'IF((C'+r+'+F'+r+')=0,0,E'+r+'/((C'+r+'+F'+r+')/2))',result:f.rate/100};
-    put2(r,[f.ft,f.pt,f.multi,f.nostart,Math.round(k.fh*100)/100,Math.round(k.ph*100)/100,Math.round(k.pm)],8);
-    ws.getCell(r,15).value=k.R.counted&&k.R.need?k.R.ok/k.R.need:'Chưa có lịch';
+    put2(r,[f.ft,f.pt,f.multi,f.nostart,Math.round(k.fh*100)/100,Math.round(k.ph*100)/100,Math.round(k.pm),Math.round(k.fm)],8);
+    ws.getCell(r,16).value=k.R.counted&&k.R.need?k.R.ok/k.R.need:'Chưa có lịch';
     r++;
   });
   function put2(row,vals,c0){vals.forEach(function(v,j){ws.getCell(row,c0+j).value=v;});}
   var last=r-1;
-  if(L.length>1){xSumRow(ws,r,'Cả chuỗi');['C','D','E','F','H','I','J','K','L','M','N'].forEach(function(c){ws.getCell(c+r).value={formula:'SUM('+c+'5:'+c+last+')'};xBold(ws.getCell(c+r));});ws.getCell('G'+r).value={formula:'IF((C'+r+'+F'+r+')=0,0,E'+r+'/((C'+r+'+F'+r+')/2))'};xBold(ws.getCell('G'+r));r++;}
-  for(var i=5;i<r;i++){ws.getCell('G'+i).numFmt='0.0%';ws.getCell('O'+i).numFmt='0.0%';ws.getCell('N'+i).numFmt='#,##0';}
+  if(L.length>1){xSumRow(ws,r,'Cả chuỗi');['C','D','E','F','H','I','J','K','L','M','N','O'].forEach(function(c){ws.getCell(c+r).value={formula:'SUM('+c+'5:'+c+last+')'};xBold(ws.getCell(c+r));});ws.getCell('G'+r).value={formula:'IF((C'+r+'+F'+r+')=0,0,E'+r+'/((C'+r+'+F'+r+')/2))'};xBold(ws.getCell('G'+r));r++;}
+  for(var i=5;i<r;i++){ws.getCell('G'+i).numFmt='0.0%';ws.getCell('P'+i).numFmt='0.0%';ws.getCell('N'+i).numFmt='#,##0';ws.getCell('O'+i).numFmt='#,##0';}
   ws.getCell(r+1,1).value='Tỷ lệ nghỉ việc = Nghỉ việc / bình quân (Đầu kỳ + Cuối kỳ). Nghỉ việc tính theo ngày làm cuối. Người chưa có ngày vào làm được tính là đã làm từ trước kỳ.';ws.getCell(r+1,1).font={name:'Arial',italic:true,color:{argb:XGREY}};
   /* 2. Biến động */
   var ev=hrEvents(L,from,to),we=wb.addWorksheet('Biến động');
@@ -4296,10 +4296,10 @@ function hrWorkbook(EJ,L,from,to){
     put(wl,rl,[x.name,st.code||'',st.name,st.role,sk[0]||'',sk.join(', '),sk.length,st.start?xDate(st.start):'',st.start?tenureM(st,st.quitDate&&st.quitDate<todayKey()?st.quitDate:null):'',st.phone||'',st.dob?xDate(st.dob):'',on?(st.quitDate?'Sắp nghỉ':'Đang làm'):(st.start&&st.start>todayKey()?'Sắp vào làm':'Đã nghỉ'),st.quitDate?xDate(st.quitDate):'',st.quitDate?reasonOf(st)+(st.quitNote?' · '+st.quitNote:''):'',st.note||'']);rl++;});});
   /* 5. Giờ công */
   var wg=wb.addWorksheet('Giờ công');
-  title(wg,'NGÀY LÀM VÀ GIỜ CÔNG THEO LỊCH ĐÃ XẾP',[['Site',30],['Mã NV',14],['Họ tên',26],['Loại',7],['Ngày làm',10],['Số ca',8],['Giờ công',10],['Đơn giá/giờ PT',13],['Lương PT ước tính (đ)',15],['Nghỉ phép (ngày)',11],['Đổi ca',8]]);
+  title(wg,'NGÀY LÀM VÀ GIỜ CÔNG THEO LỊCH ĐÃ XẾP',[['Site',30],['Mã NV',14],['Họ tên',26],['Loại',7],['Ngày làm',10],['Số ca',8],['Giờ công',10],['Đơn giá/giờ PT',13],['Lương PT ước tính (đ)',15],['Nghỉ phép (ngày)',11],['Đổi ca',8],['Lương FT ước tính (đ)',15]]);
   var rg=5;L.forEach(function(x){withSite(x.s,function(){var pr=payroll(from,to);pr.ft.concat(pr.pt).forEach(function(y){var st=y.st,sw=x.s.swaps.filter(function(w){return (w.a===st.id||w.b===st.id)&&w.date>=from&&w.date<=to;}).length;
     put(wg,rg,[x.name,st.code||'',st.name,st.role,Object.keys(y.dset).length,y.shifts,Math.round(y.hours*100)/100,st.role==='PT'?(st.rate||0):'']);
-    wg.getCell(rg,9).value=st.role==='PT'?{formula:'G'+rg+'*H'+rg,result:Math.round(y.hours*(st.rate||0))}:'';wg.getCell(rg,10).value=y.leave;wg.getCell(rg,11).value=sw;
+    wg.getCell(rg,9).value=st.role==='PT'?{formula:'G'+rg+'*H'+rg,result:Math.round(y.hours*(st.rate||0))}:'';wg.getCell(rg,10).value=y.leave;wg.getCell(rg,11).value=sw;wg.getCell(rg,12).value=st.role==='PT'?'':Math.round(ftCalc(y,from,to).total);wg.getCell(rg,12).numFmt='#,##0';
     wg.getCell(rg,8).numFmt='#,##0';wg.getCell(rg,9).numFmt='#,##0';rg++;});});});
   /* 6. Cơ cấu vị trí */
   var wp=wb.addWorksheet('Cơ cấu vị trí');
@@ -5419,17 +5419,17 @@ var H2C_SRC='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canva
 /* ---------- số liệu tổng hợp dùng chung cho Excel và PDF ---------- */
 function hrSummary(L,from,to){
   var ym=from.slice(0,7),sites=L.map(function(x){
-    var f=flowStats(x.s.staff,from,to),k=withSite(x.s,function(){var pr=payroll(from,to),fh=0,ph=0,pm=0;pr.ft.forEach(function(y){fh+=y.hours;});pr.pt.forEach(function(y){ph+=y.hours;pm+=y.hours*(y.st.rate||0);});return {fh:fh,ph:ph,pm:pm,R:kpiCalc(from,to,false)};});
+    var f=flowStats(x.s.staff,from,to),k=withSite(x.s,function(){var pr=payroll(from,to),fh=0,ph=0,pm=0,fm=0;pr.ft.forEach(function(y){fh+=y.hours;fm+=ftCalc(y,from,to).total;});pr.pt.forEach(function(y){ph+=y.hours;pm+=y.hours*(y.st.rate||0);});return {fh:fh,ph:ph,pm:pm,fm:fm,R:kpiCalc(from,to,false)};});
     var g={xs:0,tot:0,cc:0,yeu:0,na:0,sum:0,n:0},stars=[];
     x.s.staff.filter(function(st){return onRollRange(st,ym+'-01',keyOf(new Date(+ym.slice(0,4),+ym.slice(5),0)));}).forEach(function(st){var M=scMonth(x,st,ym);if(M.score==null){g.na++;return;}g.sum+=M.score;g.n++;if(M.score>=90)g.xs++;else if(M.score>=75)g.tot++;else if(M.score>=60)g.cc++;else g.yeu++;if(M.star)stars.push({st:st,v:M.score});});
     var ot={ok:0,okH:0,pend:0,pendN:0};
     [ym,ymAdd(ym,1)].forEach(function(m){otList(x,m).forEach(function(e){if(e.date<from||e.date>to)return;if(otIsDed(e))return;var a=otAmount(e);if(e.status==='duyet'){ot.ok+=a;if(e.t==='ot')ot.okH+=+e.hours||0;}else if(e.status==='cho'){ot.pend+=a;ot.pendN++;}});});
-    return {x:x,f:f,fh:k.fh,ph:k.ph,pm:k.pm,R:k.R,fill:k.R.counted&&k.R.need?k.R.ok/k.R.need*100:null,g:g,stars:stars,ot:ot};
+    return {x:x,f:f,fh:k.fh,ph:k.ph,pm:k.pm,fm:k.fm,R:k.R,fill:k.R.counted&&k.R.need?k.R.ok/k.R.need*100:null,g:g,stars:stars,ot:ot};
   });
-  var T=sumFlow(sites.map(function(s){return s.f;})),need=0,ok=0,fh=0,ph=0,pm=0,G={xs:0,tot:0,cc:0,yeu:0,na:0,sum:0,n:0},OT={ok:0,okH:0,pend:0,pendN:0};
-  sites.forEach(function(s){if(s.R.counted){need+=s.R.need;ok+=s.R.ok;}fh+=s.fh;ph+=s.ph;pm+=s.pm;Object.keys(G).forEach(function(k){G[k]+=s.g[k];});Object.keys(OT).forEach(function(k){OT[k]+=s.ot[k];});});
+  var T=sumFlow(sites.map(function(s){return s.f;})),need=0,ok=0,fh=0,ph=0,pm=0,fm=0,G={xs:0,tot:0,cc:0,yeu:0,na:0,sum:0,n:0},OT={ok:0,okH:0,pend:0,pendN:0};
+  sites.forEach(function(s){if(s.R.counted){need+=s.R.need;ok+=s.R.ok;}fh+=s.fh;ph+=s.ph;pm+=s.pm;fm+=s.fm;Object.keys(G).forEach(function(k){G[k]+=s.g[k];});Object.keys(OT).forEach(function(k){OT[k]+=s.ot[k];});});
   var P=pipSummary(L);
-  return {sites:sites,T:T,fill:need?ok/need*100:null,fh:fh,ph:ph,pm:pm,G:G,OT:OT,P:P,ym:ym};
+  return {sites:sites,T:T,fill:need?ok/need*100:null,fh:fh,ph:ph,pm:pm,fm:fm,G:G,OT:OT,P:P,ym:ym};
 }
 function hrInsights(Sm,from,to){
   var out=[],T=Sm.T;
@@ -5456,7 +5456,7 @@ function hrCover(ws,L,from,to){
   function sec(r,t){ws.mergeCells('B'+r+':F'+r);var c=ws.getCell('B'+r);c.value=t;c.font={name:'Arial',bold:true,size:11,color:{argb:'FFFFFFFF'}};c.fill={type:'pattern',pattern:'solid',fgColor:{argb:RP_NAVY}};c.alignment={vertical:'middle',indent:1};ws.getRow(r).height=22;}
   sec(5,'CHỈ SỐ CHÍNH');
   var T=Sm.T,K=[['Nhân sự đang làm',T.on+' người (FT '+T.ft+' · PT '+T.pt+')'],['Vào làm / nghỉ việc trong kỳ',T.ins.length+' / '+T.outs.length],['Tỷ lệ nghỉ việc',fmtPct(T.rate)],['Đáp ứng định biên cả kỳ',Sm.fill==null?'Chưa có lịch':fmtPct(Sm.fill)],
-    ['Giờ công FT / PT (theo lịch)',fmtH(Sm.fh)+' / '+fmtH(Sm.ph)+' giờ'],['Lương PT ước tính',fmtVND(Sm.pm)+' đ'],['Điểm trung bình '+ymLabel(Sm.ym).toLowerCase(),Sm.G.n?fmtSc(Sm.G.sum/Sm.G.n)+' điểm':'Chưa đủ dữ liệu'],['Xếp loại Xuất sắc / Tốt / Cần cải thiện / Yếu',Sm.G.xs+' / '+Sm.G.tot+' / '+Sm.G.cc+' / '+Sm.G.yeu],
+    ['Giờ công FT / PT (theo lịch)',fmtH(Sm.fh)+' / '+fmtH(Sm.ph)+' giờ'],['Lương PT ước tính',fmtVND(Sm.pm)+' đ'],['Lương FT ước tính (chưa gồm BHXH)',fmtVND(Sm.fm)+' đ'],['Điểm trung bình '+ymLabel(Sm.ym).toLowerCase(),Sm.G.n?fmtSc(Sm.G.sum/Sm.G.n)+' điểm':'Chưa đủ dữ liệu'],['Xếp loại Xuất sắc / Tốt / Cần cải thiện / Yếu',Sm.G.xs+' / '+Sm.G.tot+' / '+Sm.G.cc+' / '+Sm.G.yeu],
     ['Diện theo dõi đang mở / chờ duyệt',Sm.P.open.length+' / '+Sm.P.review.length],['Công thêm đã duyệt',fmtVND(Sm.OT.ok)+' đ'],['Công thêm chờ duyệt',Sm.OT.pendN+' khoản · '+fmtVND(Sm.OT.pend)+' đ'],['Người chưa có ngày vào làm',T.nostart+' người']];
   var r=6;
   for(var i=0;i<K.length;i+=2){
@@ -5540,11 +5540,11 @@ function hrPdfDom(L,from,to){
   var mn=Math.min.apply(null,ser.map(function(o){return o.head;}).concat([0])),mx=Math.max.apply(null,ser.map(function(o){return o.head;}).concat([1])),lo=Math.max(0,mn-2);
   var chart='<div class="rp-ch">'+ser.map(function(o){return '<i style="height:'+Math.max(3,(o.head-lo)/Math.max(1,mx-lo)*100)+'%" title="'+o.head+'"></i>';}).join('')+'</div><div class="rp-ax"><span>'+(ser[0]?dm(ser[0].dk):'')+' · '+(ser[0]?ser[0].head:'')+' người</span><span>'+(ser.length?dm(ser[ser.length-1].dk)+' · '+ser[ser.length-1].head+' người':'')+'</span></div>';
   var N=3,pg1='<div class="rp-page"><div class="rp-band"><small>'+esc(HTD_LINE)+'</small><h1>Báo cáo nhân sự</h1><p>Kỳ '+dmy(from)+' – '+dmy(to)+' · '+(L.length>1?L.length+' site':esc(L[0].name))+' · xuất '+fmtTime(new Date().toISOString())+' · '+esc(meName())+'</p></div>'
-    +'<h2>Chỉ số chính</h2><div class="rp-k">'+[['Nhân sự đang làm',T.on,'FT '+T.ft+' · PT '+T.pt],['Vào làm',T.ins.length,'trong kỳ'],['Nghỉ việc',T.outs.length,'tỷ lệ '+fmtPct(T.rate)],['Đáp ứng định biên',Sm.fill==null?'—':fmtPct(Sm.fill),'cả kỳ'],['Giờ công PT',fmtH(Sm.ph),'giờ theo lịch'],['Lương PT ước tính',fmtVND(Sm.pm),'đồng'],['Điểm TB '+ymLabel(Sm.ym).toLowerCase(),Sm.G.n?fmtSc(Sm.G.sum/Sm.G.n):'—',Sm.G.n+' người có điểm'],['Công thêm đã duyệt',fmtVND(Sm.OT.ok),Sm.OT.pendN+' khoản chờ duyệt']].map(function(k){return '<div><span>'+esc(k[0])+'</span><b>'+esc(String(k[1]))+'</b><span>'+esc(k[2])+'</span></div>';}).join('')+'</div>'
+    +'<h2>Chỉ số chính</h2><div class="rp-k">'+[['Nhân sự đang làm',T.on,'FT '+T.ft+' · PT '+T.pt],['Vào làm',T.ins.length,'trong kỳ'],['Nghỉ việc',T.outs.length,'tỷ lệ '+fmtPct(T.rate)],['Đáp ứng định biên',Sm.fill==null?'—':fmtPct(Sm.fill),'cả kỳ'],['Giờ công PT',fmtH(Sm.ph),'giờ theo lịch'],['Lương PT ước tính',fmtVND(Sm.pm),'đồng'],['Lương FT ước tính',fmtVND(Sm.fm),'đồng, chưa gồm BHXH'],['Điểm TB '+ymLabel(Sm.ym).toLowerCase(),Sm.G.n?fmtSc(Sm.G.sum/Sm.G.n):'—',Sm.G.n+' người có điểm'],['Công thêm đã duyệt',fmtVND(Sm.OT.ok),Sm.OT.pendN+' khoản chờ duyệt']].map(function(k){return '<div><span>'+esc(k[0])+'</span><b>'+esc(String(k[1]))+'</b><span>'+esc(k[2])+'</span></div>';}).join('')+'</div>'
     +'<h2>Nhận xét chính</h2><ul>'+hrInsights(Sm,from,to).map(function(t){return '<li>'+esc(t)+'</li>';}).join('')+'</ul>'
     +'<h2>Số nhân sự đang làm mỗi ngày</h2>'+chart+'<p class="rp-note">Tính từ ngày vào làm và ngày làm cuối trong hồ sơ nhân viên; người chưa có ngày vào làm được tính là đã làm từ trước kỳ.</p>'+ft(1,N)+'</div>';
-  var pg2='<div class="rp-page"><h2>Theo site</h2><table><thead><tr><th>Site</th><th class="n">Đang làm</th><th class="n">FT/PT</th><th class="n">Vào</th><th class="n">Nghỉ</th><th class="n">Tỷ lệ nghỉ</th><th class="n">Định biên</th><th class="n">Giờ PT</th><th class="n">Lương PT (đ)</th></tr></thead><tbody>'
-    +Sm.sites.map(function(s){return '<tr><td>'+esc(s.x.name)+'</td><td class="n">'+s.f.on+'</td><td class="n">'+s.f.ft+'/'+s.f.pt+'</td><td class="n">'+s.f.ins.length+'</td><td class="n">'+s.f.outs.length+'</td><td class="n">'+fmtPct(s.f.rate)+'</td><td class="n">'+(s.fill==null?'—':fmtPct(s.fill))+'</td><td class="n">'+fmtH(s.ph)+'</td><td class="n">'+fmtVND(s.pm)+'</td></tr>';}).join('')+'</tbody></table>';
+  var pg2='<div class="rp-page"><h2>Theo site</h2><table><thead><tr><th>Site</th><th class="n">Đang làm</th><th class="n">FT/PT</th><th class="n">Vào</th><th class="n">Nghỉ</th><th class="n">Tỷ lệ nghỉ</th><th class="n">Định biên</th><th class="n">Giờ PT</th><th class="n">Lương PT (đ)</th><th class="n">Lương FT (đ)</th></tr></thead><tbody>'
+    +Sm.sites.map(function(s){return '<tr><td>'+esc(s.x.name)+'</td><td class="n">'+s.f.on+'</td><td class="n">'+s.f.ft+'/'+s.f.pt+'</td><td class="n">'+s.f.ins.length+'</td><td class="n">'+s.f.outs.length+'</td><td class="n">'+fmtPct(s.f.rate)+'</td><td class="n">'+(s.fill==null?'—':fmtPct(s.fill))+'</td><td class="n">'+fmtH(s.ph)+'</td><td class="n">'+fmtVND(s.pm)+'</td><td class="n">'+fmtVND(s.fm)+'</td></tr>';}).join('')+'</tbody></table>';
   var rs={};T.outs.forEach(function(st){var k=reasonOf(st);rs[k]=(rs[k]||0)+1;});
   pg2+='<h2>Lý do nghỉ việc</h2>'+(T.outs.length?bars(Object.keys(rs).map(function(k){return {l:k,v:rs[k]};}).sort(function(a,b){return b.v-a.v;})):'<p class="rp-note">Không có ai nghỉ việc trong kỳ.</p>');
   pg2+='<h2>Biến động trong kỳ</h2>'+(ev.length?'<table><thead><tr><th>Ngày</th><th>Site</th><th>Nhân viên</th><th>Loại</th><th>Biến động</th><th>Lý do</th></tr></thead><tbody>'+ev.slice(0,18).map(function(e){return '<tr><td>'+dm(e.dk)+'</td><td>'+esc(e.x.name)+'</td><td>'+esc(e.st.name)+'</td><td>'+esc(e.st.role)+'</td><td>'+(e.t==='in'?'Vào làm':'Nghỉ việc')+'</td><td>'+(e.t==='out'?esc(reasonOf(e.st)):'')+'</td></tr>';}).join('')+'</tbody></table>'+(ev.length>18?'<p class="rp-note">… và '+(ev.length-18)+' biến động khác, xem file Excel.</p>':''):'<p class="rp-note">Không có biến động trong kỳ.</p>')+ft(2,N)+'</div>';
@@ -9426,7 +9426,16 @@ function renderPop(focus){
   var AT=atomShifts();if(AT.length>1){var curA=(c.s&&c.s!=='O'&&c.s!=='F')?shiftsOf(c.s):[];
     h+='<div class="pop-lbl">Ca gãy / làm nhiều ca <small>bấm chọn từng ca, ví dụ ca sáng + ca tối</small></div><div class="seg">'+AT.map(function(sh){var on=curA.indexOf(sh.id)>=0,nx=on?curA.filter(function(x){return x!==sh.id;}):curA.concat([sh.id]),bad=nx.length>1&&!splitOk(s,k,d,nx);return '<button class="opt'+(on?' on':'')+(bad?' nosplit':'')+'" data-pop="m" data-v="'+sh.id+'" aria-pressed="'+on+'"'+(bad?' title="Tạo thành ca gãy: nhân viên không đăng ký ca gãy ngày này"':'')+'><span>'+shDot(shIdx(sh.id))+esc(sh.name)+'</span>'+(sh.time?'<small>'+esc(sh.time)+'</small>':'')+'</button>';}).join('')+'</div>';}
   if(c.s&&c.s!=='O'){
-    h+='<div class="pop-lbl">Vị trí</div><div class="posopts">'+S.positions.map(function(p){
+    var atomsP=shiftsOf(c.s);
+    if(atomsP.length>1){
+      h+='<div class="pop-lbl">Vị trí từng đoạn ca <small>chọn riêng cho mỗi đoạn, ví dụ sáng Hướng nghiệp, chiều Nhà bóng</small></div>';
+      atomsP.forEach(function(id){var sh=shift(id);if(!sh)return;
+        h+='<div class="pop-lbl sm">'+shDot(shIdx(id))+esc(sh.name)+(sh.time?' · '+esc(sh.time):'')+'</div><div class="posopts">'+S.positions.map(function(p){
+          var g=Math.max(0,needF(d,id,p.id)-cov[d][id][p.id]),tr=s.skills.indexOf(p.id)>=0,cur=posOf(c,id)===p.id;
+          return '<button class="popt'+(cur?' on':'')+(tr?'':' untrained')+'" data-pop="pa" data-v="'+id+'|'+p.id+'"><span class="chip pc'+p.c+'">'+esc(p.name)+'</span><small'+(tr&&g>0?' class="need"':'')+'>'+(!tr?'chưa đào tạo':(cur?'đang đứng · ':'')+(g>0?'đoạn này thiếu '+g:'đoạn này đủ người'))+'</small></button>';
+        }).join('')+'</div>';});
+    }
+    h+='<div class="pop-lbl">Vị trí'+(atomsP.length>1?' <small>bấm để đặt cùng một vị trí cho cả ca</small>':'')+'</div><div class="posopts">'+S.positions.map(function(p){
       var g=0;S.shifts.forEach(function(sh){if(covers(c.s,sh.id))g+=Math.max(0,needF(d,sh.id,p.id)-cov[d][sh.id][p.id]);});
       var tr=s.skills.indexOf(p.id)>=0;
       return '<button class="popt'+(c.p===p.id?' on':'')+(tr?'':' untrained')+'" data-pop="p" data-v="'+p.id+'"><span class="chip pc'+p.c+'">'+esc(p.name)+'</span><small'+(tr&&g>0?' class="need"':'')+'>'+(tr?'ưu tiên '+(s.skills.indexOf(p.id)+1)+' · ':'')+(!tr?'chưa đào tạo':(posList(c).indexOf(p.id)>=0?'đang đứng · ':'')+(g>0?'ca này thiếu '+g:'ca này đủ người'))+'</small></button>';
@@ -9489,6 +9498,7 @@ $pop.addEventListener('click',function(e){
     if(!Lm.length){setCell(k,sid,d,null);markDirty();render();return;}
     var nm2=comboOf(Lm),pm=cm&&cm.p&&pos(cm.p)?cm.p:bestPos(s,d,nm2);setCell(k,sid,d,{s:nm2,p:pm,ps:cm&&cm.s!=='O'?cm.ps:undefined});markDirty();render();return;
   }
+  if(a==='pa'){if(!canEdit())return;var pv=b.dataset.v.split('|');if(!getCell(k,sid,d))return;setAtomPos(k,s,d,pv[0],pv[1]);markDirty();render();return;}
   if(a==='p'){var cu=getCell(k,sid,d);if(!cu)return;setCell(k,sid,d,{s:cu.s,p:b.dataset.v});markDirty();closePop();render();}
 });
 document.addEventListener('click',function(e){
