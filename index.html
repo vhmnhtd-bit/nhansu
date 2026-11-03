@@ -79,6 +79,7 @@ h1{font-size:30px;font-weight:700;letter-spacing:-.015em;line-height:1.1}
 .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 
 .summary{display:flex;flex-wrap:wrap;align-items:flex-end;gap:18px 28px}
+.mlv{display:flex;flex-direction:column;gap:8px;margin:4px 0 12px}.mlvgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:8px}.mlvc{display:flex;flex-direction:column;gap:3px;font-size:12px;padding:6px 8px;border:1px solid var(--line);border-radius:10px}.mlvc.lv-low{background:#EEF4FF}.mlvc.lv-pk{background:#FFF1E8}.mlvc .in{padding:4px 6px}
 .fill{min-width:220px;display:flex;flex-direction:column;gap:6px}
 .big{font-family:var(--f-display);font-variant-numeric:tabular-nums;line-height:1}
 .big b{font-size:40px;font-weight:700}.big span{font-size:22px;color:var(--muted);font-weight:600}
@@ -1343,7 +1344,7 @@ body{margin:0}
 @media (max-width:600px){.ab-in{padding:6px 16px}.ab-brand small,.ab-chip span{display:none}.ab-chip{padding:3px}.ab-chip svg{display:none}}
 </style>
 <div id="xc-login" class="xc-login" hidden></div>
-<script id="xc-shim">window.XC_BUILD='2026-11-03 15:32';
+<script id="xc-shim">window.XC_BUILD='2026-11-03 16:38';
 (function(){
 'use strict';
 var TOKEN_KEY='xc_token';
@@ -1804,7 +1805,19 @@ function hoursOf(s){if(s==='F')return fullHrs();return units(shiftsOf(s)).reduce
 function posOf(c,id){return (c&&c.ps&&c.ps[id])||(c&&c.p)||null;}
 function posList(c){var L=[];shiftsOf(c.s).forEach(function(id){var p=posOf(c,id);if(p&&L.indexOf(p)<0)L.push(p);});if(!L.length&&c.p)L.push(c.p);return L;}
 function fixOf(st){return expandIds(st&&st.fix||[]);}
-function needF(d,sh,p){if(isComp(sh))return 0;var x=S.demand[d];return (x&&x[sh]&&x[sh][p])||0;}
+/* 03/11/2026 (Phúc): định biên 3 mức Thường / Thấp điểm / Cao điểm, CHT chọn mức cho từng tháng ở Thiết lập site.
+   S.demand = bảng Thường; S.demandLv = {low:[7 ngày], pk:[7 ngày]} (chưa tạo bảng riêng thì dùng bảng Thường);
+   S.monthLv = {'YYYY-MM':'low'|'pk'} (tháng không ghi = Thường). Ngày lễ không tự đổi mức.
+   needF(d,…) lấy ngày = addDays(NEEDK || view.week, d); coverage, kpiCalc, nhập lịch đặt NEEDK theo tuần đang tính (atWeek).
+   DEM_LV: đang sửa bảng nào ở Thiết lập site thì đọc thẳng bảng đó. */
+var DEM_LVS=[['std','Thường'],['low','Thấp điểm'],['pk','Cao điểm']],NEEDK=null,DEM_LV=null,YMC={};
+function lvName(lv){for(var i=0;i<DEM_LVS.length;i++)if(DEM_LVS[i][0]===lv)return DEM_LVS[i][1];return 'Thường';}
+function demTab(lv){return lv&&lv!=='std'&&S.demandLv&&S.demandLv[lv]?S.demandLv[lv]:S.demand;}
+function demAll(){var L=S.demand.slice();if(S.demandLv)Object.keys(S.demandLv).forEach(function(lv){L=L.concat(S.demandLv[lv]||[]);});return L;}
+function lvOfMonth(ym){var v=S&&S.monthLv&&S.monthLv[ym];return v==='low'||v==='pk'?v:'std';}
+function lvOn(dk){return lvOfMonth(String(dk).slice(0,7));}
+function atWeek(k,f){var o=NEEDK;NEEDK=k;try{return f();}finally{NEEDK=o;}}
+function needF(d,sh,p){if(isComp(sh))return 0;var lv=DEM_LV;if(!lv){var k=NEEDK||view.week,key=k+d;lv=lvOfMonth(YMC[key]||(YMC[key]=addDays(k,d).slice(0,7)));}var x=demTab(lv)[d];return (x&&x[sh]&&x[sh][p])||0;}
 function dayNeed(d){var n=0;S.shifts.forEach(function(sh){S.positions.forEach(function(p){n+=needF(d,sh.id,p.id);});});return n;}
 function shiftLabel(s){if(s==='F')return 'Cả ngày';var u=units(shiftsOf(s));return u.length?u.map(function(x){return x.name;}).join(' + '):s;}
 function shIdx(s){for(var i=0;i<S.shifts.length;i++)if(S.shifts[i].id===s)return i;return -1;}
@@ -1853,11 +1866,29 @@ function regLabel(a){if(a==='A')return 'cả ngày';var L=regList(a);return L.le
 function availWhy(st,k,d){if(st.quitDate&&addDays(k,d)>st.quitDate)return 'đã nghỉ việc từ '+dm(addDays(st.quitDate,1));var r=S.reg[k]&&S.reg[k][st.id];if(r)return 'đăng ký '+regLabel(r[d]);if(st.role==='PT'&&regUsed(k))return 'chưa đăng ký tuần này';return 'ngày cố định không làm';}
 function blocks(kind,s){if(!kind||!s||s==='O')return false;if(kind==='F'||s==='F')return true;var K=shiftsOf(kind);return shiftsOf(s).some(function(id){return K.indexOf(id)>=0;});}
 
-function coverage(k){
+function coverage(k){return atWeek(k,function(){return coverage0(k);});}
+function coverage0(k){
   var cov=[],d;
   for(d=0;d<7;d++){cov[d]={};S.shifts.forEach(function(sh){cov[d][sh.id]={};S.positions.forEach(function(p){cov[d][sh.id][p.id]=0;});});}
-  S.staff.forEach(function(st){for(var d2=0;d2<7;d2++){var c=getCell(k,st.id,d2);if(!c||c.s==='O')continue;S.shifts.forEach(function(sh){var pp=posOf(c,sh.id);if(pp&&covers(c.s,sh.id)&&cov[d2][sh.id][pp]!=null)cov[d2][sh.id][pp]++;});}});
+  S.staff.forEach(function(st){for(var d2=0;d2<7;d2++){var c=getCell(k,st.id,d2);if(!c||c.s==='O')continue;var cr=cellCredit(c,d2);Object.keys(cr).forEach(function(id){var pp=cr[id];if(cov[d2][id]&&cov[d2][id][pp]!=null)cov[d2][id][pp]++;});}});
   return cov;
+}
+/* PATCH_DB_KHUNGGIO (03/11/2026): ô lịch đứng cho những ca ngắn nào, ở vị trí nào — theo khung giờ, không chỉ đúng mã ca.
+   Trả về {mã ca ngắn: mã vị trí}. Xem patch_dinhbien_khunggio.js. */
+function cellCredit(c,d){
+  var out={};if(!c||!c.s||c.s==='O')return out;
+  var ids=shiftsOf(c.s);if(!ids.length)return out;
+  var seg=[];ids.forEach(function(id){var t=shiftSpan(shift(id)),p=posOf(c,id);if(t&&p)seg.push({a:t[0],b:t[1],p:p});});
+  seg.sort(function(x,y){return x.a-y.a||x.b-y.b;});
+  var M=[];seg.forEach(function(s){var L=M[M.length-1];if(L&&L.p===s.p&&s.a<=L.b)L.b=Math.max(L.b,s.b);else M.push({a:s.a,b:s.b,p:s.p});});
+  var posAt=function(t){for(var i=0;i<M.length;i++)if(M[i].a<=t[0]&&t[1]<=M[i].b)return M[i].p;return null;};
+  var used={},hit=function(p,t){return (used[p]||[]).some(function(u){return u[0]<t[1]&&t[0]<u[1];});},mark=function(p,t){(used[p]||(used[p]=[])).push(t);};
+  ids.forEach(function(id){var p=posOf(c,id),t=shiftSpan(shift(id));if(p&&t&&needF(d,id,p)>0){out[id]=p;mark(p,t);}});
+  atomShifts().map(function(sh){return {id:sh.id,t:shiftSpan(sh)};}).filter(function(x){return x.t&&ids.indexOf(x.id)<0;})
+    .sort(function(x,y){return x.t[0]-y.t[0]||x.t[1]-y.t[1];})
+    .forEach(function(x){var p=posAt(x.t);if(!p||needF(d,x.id,p)<=0||hit(p,x.t))return;out[x.id]=p;mark(p,x.t);});
+  ids.forEach(function(id){if(out[id])return;var p=posOf(c,id),t=shiftSpan(shift(id));if(!p||(t&&hit(p,t)))return;out[id]=p;});
+  return out;
 }
 function stats(cov){
   var r={need:0,filled:0,short:0,over:0,dayShort:[0,0,0,0,0,0,0]};
@@ -2379,6 +2410,8 @@ function renderWeek(){
   if(canEdit())h+=stepsPanel(k);
   var nf=[];
   if(nf.length)h+='<div class="banner warn"><span><b>FT đăng ký nhiều ca/ngày nhưng chưa đặt Ca cố định:</b> '+esc(nf.map(function(x){return x.st.name+' ('+x.fix.map(function(id){return shift(id).name;}).join(' + ')+')';}).join('; '))+'. Chưa đặt thì mỗi ngày chỉ được xếp 1 ca.</span>'+cbtn('fixfromreg','Đặt ca cố định theo đăng ký và xếp lại tuần','Bấm lần nữa: xếp lại cả tuần (giữ nghỉ phép, đổi ca)','sm primary')+'</div>';
+  var lvW={};for(var dl=0;dl<7;dl++){var lw=lvOn(addDays(k,dl));if(lw!=='std')lvW[lw]=(lvW[lw]||[]).concat([DAYS[dl]]);}
+  if(Object.keys(lvW).length)h+='<div class="banner"><span><b>Định biên '+Object.keys(lvW).map(function(lw){return lvName(lw)+(lvW[lw].length<7?' ('+lvW[lw].join(', ')+')':'');}).join(', ')+'</b> theo mức tháng ở Thiết lập site.'+(Object.keys(lvW).reduce(function(n,lw){return n+lvW[lw].length;},0)<7?' Ngày còn lại dùng bảng Thường.':'')+'</span></div>';
   h+='<section class="summary"><div class="fill"><div class="big"><b>'+st.filled+'</b><span>/'+st.need+'</span></div><div class="lbl">lượt vị trí theo định biên đã có người</div><div class="bar'+(pct>=100?' full':'')+'"><i style="width:'+pct+'%"></i></div></div>'
     +'<div class="kpis"><div class="kpi '+(st.short?'is-short':'is-ok')+'"><b>'+st.short+'</b><span>lượt còn thiếu</span></div>'
     +'<div class="kpi'+(st.over?' is-over':'')+'"><b>'+st.over+'</b><span>lượt dư</span></div>'
@@ -2739,12 +2772,28 @@ function preloadLibs(){if(libsP||!hasClaude)return;libsP=setTimeout(function(){g
 
 /* ---------- tab Thiết lập site ---------- */
 function demTotal(d,sh){var n=0;S.positions.forEach(function(p){n+=needF(d,sh,p.id);});return n;}
+function demLvEd(){return view.demLv||'std';}
+/* bảng đang sửa; bảng Thấp / Cao chưa có thì tạo bằng cách chép bảng Thường khi sửa ô đầu tiên */
+function demEdit(){var lv=demLvEd();if(lv==='std')return S.demand;S.demandLv=S.demandLv||{};return S.demandLv[lv]||(S.demandLv[lv]=clone(S.demand));}
+function monthLvPanel(){
+  var y=view.demY||+todayKey().slice(0,4),now=todayKey().slice(0,7),ed=canEdit(),mgr=ROLE==='mgr';
+  var h='<div class="mlv"><div class="row"><b>Mức định biên theo tháng</b><span class="sm muted">Tháng không chọn = Thường. Ngày lễ không tự đổi mức. '+(mgr?'':'Tháng đã qua chỉ quản lý chuỗi sửa được (giữ đúng KPI đã tính).')+'</span>'
+    +'<span class="grow"></span><button class="btn sm ghost" data-act="demy" data-v="-1" aria-label="Năm trước">‹</button><b>'+y+'</b><button class="btn sm ghost" data-act="demy" data-v="1" aria-label="Năm sau">›</button></div><div class="mlvgrid">';
+  for(var m=1;m<=12;m++){var ym=y+'-'+(m<10?'0':'')+m,lv=lvOfMonth(ym),lock=!ed||(ym<now&&!mgr);
+    h+='<label class="mlvc lv-'+lv+'"><span>Tháng '+m+'</span><select class="in" data-mlv="'+ym+'"'+(lock?' disabled':'')+'>'+DEM_LVS.map(function(o){return '<option value="'+o[0]+'"'+(o[0]===lv?' selected':'')+'>'+o[1]+'</option>';}).join('')+'</select></label>';}
+  return h+'</div></div>';
+}
 function renderDemand(){
   var h=banners()+'<section class="panel"><div class="panel-h split"><div><h2>Thiết lập site</h2><p>Dữ liệu cố định của site: ca làm, vị trí, định biên, nhân viên. <b>Lần đầu:</b> tải file thiết lập, điền, rồi nhập. <b>Khi có thay đổi</b> (nhân viên mới, nghỉ việc, thêm vị trí, đổi định biên): sửa trực tiếp bên dưới và ở tab Thiết lập nhân viên, hoặc tải file (đã có dữ liệu hiện tại), sửa rồi nhập lại. Đăng ký ca hằng tuần nhập ở tab Đăng ký ca.</p></div>'
     +'<div class="row"><button class="btn" data-act="exportsetup">Tải file thiết lập</button><button class="btn primary" data-act="xlsimport">Nhập file thiết lập</button></div></div>'
     +'<div class="formgrid"><label class="fl">Tên cơ sở<input class="in" id="sitename" data-f="site" value="'+esc(S.site)+'" placeholder="Ví dụ: Wolfoo Vạn Hạnh Mall"'+(S.siteKey?' readonly title="Tên theo danh sách cơ sở của quản lý"':'')+'>'+(S.siteKey?'<small class="meta">Theo danh sách cơ sở do quản lý đặt</small>':'')+'</label><label class="fl">Mục tiêu đáp ứng định biên (%)<input class="in num" type="text" inputmode="numeric" maxlength="3" onfocus="this.select()" id="site-target" data-f="kpitarget" value="'+S.kpiTarget+'"></label></div></section>';
   h+='<section class="panel"><div class="panel-h"><h2>Định biên theo ca</h2><p>Số người cần cho từng vị trí trong mỗi ca, theo từng ngày.'+(Object.keys(compMap()).length?' Chỉ cài ở các ca ngắn. Ca dài (ca ghép) không cần cài: tại mỗi giờ, số người = định biên của ca ngắn chứa giờ đó.':'')+'</p></div>';
+  var lvE=demLvEd(),own=lvE==='std'||!!(S.demandLv&&S.demandLv[lvE]);
+  h+=monthLvPanel();
+  h+='<div class="row"><span class="sm muted">Đang sửa bảng:</span><div class="seg">'+DEM_LVS.map(function(o){return '<button class="opt'+(o[0]===lvE?' on':'')+'" data-act="demlv" data-v="'+o[0]+'">'+o[1]+'</button>';}).join('')+'</div>'
+    +(lvE==='std'?'':own?cbtn('demlvdel:'+lvE,'Bỏ bảng '+lvName(lvE)+' (dùng lại bảng Thường)','Bấm lần nữa','sm ghost danger'):'<span class="sm muted">Chưa có bảng riêng: đang hiện số của bảng Thường. Sửa ô nào là tạo bảng '+lvName(lvE)+' từ bảng Thường.</span>')+'</div>';
   h+='<div class="row"><button class="btn sm" data-act="copywd">Chép T2 sang T3–T6</button><button class="btn sm" data-act="copysat">Chép T7 sang CN</button></div>';
+  DEM_LV=lvE;
   h+='<div class="tblwrap"><table class="tbl dem"><thead><tr><th>Ca · vị trí</th>'+DAYS.map(function(x){return '<th style="text-align:center">'+x+'</th>';}).join('')+'</tr></thead><tbody>';
   S.shifts.forEach(function(sh){
     if(isComp(sh.id)){h+='<tr class="grp"><th colspan="8">Ca '+esc(sh.name)+'<span>'+esc(sh.time)+' · ca ghép = '+esc(compParts(sh.id).map(function(id){return shift(id).name;}).join(' + '))+', không cần định biên: người đăng ký ca này được xếp vào các ca ngắn trên</span></th></tr>';return;}
@@ -2758,7 +2807,7 @@ function renderDemand(){
     for(var d=0;d<7;d++)h+='<td data-tot="'+d+':'+sh.id+'">'+demTotal(d,sh.id)+'</td>';
     h+='</tr>';
   });
-  h+='</tbody></table></div></section>';
+  h+='</tbody></table></div></section>';DEM_LV=null;
   h+='<div class="cols"><section class="panel" id="ca-panel"><div class="panel-h"><h2>Ca làm</h2><p>Khai bao nhiêu ca cũng được, bấm Thêm ca để thêm. <b>Mã ca</b> là mã ca đã thiết lập trên MISA chấm công: nhân viên đăng ký ca, công cụ xếp lịch và file xuất MISA đều dùng mã này. Giờ công là số giờ tính lương PT mỗi ca, đã trừ giờ nghỉ nếu có.</p></div><div class="flist"><div class="frow head"><span>Mã ca MISA</span><span>Giờ ca</span><span>Giờ công</span><span></span></div>'
     +S.shifts.map(function(sh,i){return '<div class="frow"><span class="mcode">'+shDot(i)+'<input class="in mono" id="shcode-'+sh.id+'" data-f="shcode" data-id="'+sh.id+'" value="'+esc(sh.misa||'')+'" placeholder="'+esc('Mã MISA · '+sh.name)+'" autocomplete="off" aria-label="Mã ca MISA của ca '+(i+1)+'"></span><input class="in mono" id="shtime-'+sh.id+'" data-f="shtime" data-id="'+sh.id+'" value="'+esc(sh.time)+'" aria-label="Giờ ca '+(i+1)+'"><input class="in num" inputmode="decimal" id="shhours-'+sh.id+'" data-f="shhours" data-id="'+sh.id+'" value="'+fmtH(sh.hours)+'" aria-label="Giờ công ca '+(i+1)+'">'+(S.shifts.length>1?cbtn('delshift:'+sh.id,'Xoá','Bấm lần nữa','sm ghost danger'):'<span></span>')+'</div>';}).join('')
     +(S.shifts.length>1?'<div class="frow"><span class="mcode">'+shDot(-1)+'<input class="in mono" id="misa-full" data-f="misafull" value="'+esc(S.misa.full||'')+'" placeholder="Mã cả ngày (nếu có)" autocomplete="off" aria-label="Mã ca MISA khi làm cả ngày"></span><span class="sm muted">Cả ngày = '+esc(units(fullIds()).map(function(x){return x.name;}).join(' + '))+'</span><input class="in num" inputmode="decimal" id="fullhours" data-f="fullhours" value="'+fmtH(fullHrs())+'"'+(fullCode()?'':' disabled title="Chưa có mã MISA cả ngày: giờ công = tổng giờ các ca, giống cách MISA tính"')+' aria-label="Giờ công ca cả ngày"><span></span></div>':'')
@@ -3361,7 +3410,7 @@ function kpiCalc(from,to,inc){
   var R={need:0,ok:0,short:0,over:0,shifts:0,shiftsMet:0,needH:0,schedH:0,days:[],pos:{},gaps:[],skipped:0,counted:0};
   S.positions.forEach(function(p){R.pos[p.id]={p:p,need:0,ok:0,short:0,over:0};});
   var cc={};
-  eachDate(from,to,function(dk){
+  eachDate(from,to,function(dk){atWeek(mondayOf(parseKey(dk)),function(){
     var k=mondayOf(parseKey(dk)),d=dow(dk),any=false,hh=0;
     S.staff.forEach(function(st){var c=getCell(k,st.id,d);if(c&&c.s!=='O'){any=true;hh+=hoursOf(c.s);}});
     if(!any&&!inc){R.skipped++;return;}
@@ -3378,7 +3427,7 @@ function kpiCalc(from,to,inc){
       if(has){row.sn++;if(met)row.sm++;}
     });
     R.need+=row.need;R.ok+=row.ok;R.short+=row.short;R.over+=row.over;R.shifts+=row.sn;R.shiftsMet+=row.sm;R.needH+=row.nh;R.schedH+=hh;R.days.push(row);
-  });
+  });});
   R.swapList=S.swaps.filter(function(w){return w.date>=from&&w.date<=to;});
   return R;
 }
@@ -3548,7 +3597,7 @@ function applyShifts(list,full){
   if(removed.length){
     Object.keys(S.weeks).forEach(function(wk){Object.keys(S.weeks[wk]).forEach(function(sid){var w=S.weeks[wk][sid];Object.keys(w).forEach(function(d){if(removed.indexOf(w[d].s)>=0)delete w[d];});if(!Object.keys(w).length)delete S.weeks[wk][sid];});});
     Object.keys(S.reg).forEach(function(wk){Object.keys(S.reg[wk]).forEach(function(sid){S.reg[wk][sid]=S.reg[wk][sid].map(function(a){if(!a||a==='A')return a;return a.split(',').filter(function(x){return removed.indexOf(x)<0;}).join(',');});});});
-    S.demand.forEach(function(dd){removed.forEach(function(id){delete dd[id];});});
+    demAll().forEach(function(dd){removed.forEach(function(id){delete dd[id];});});
   }
   return removed.length;
 }
@@ -4379,7 +4428,7 @@ var SC_GROUPS=[
     ['a3',10,'Can thiệp đúng cách khi trẻ chạy, tranh giành, leo trèo; không để trẻ một mình ở khu nguy hiểm; tiếp xúc đúng mực; không chạy trong khu chơi','QĐ 3.1, 3.4, 5.2'],
     ['a4',5,'Sự cố: sơ cứu, báo phụ huynh và tổ trưởng ngay, ghi sổ sự cố; trẻ thất lạc: ở cạnh trẻ, báo quản lý ca','SOP 4.5D, QĐ 5.2']]},
   {g:'II',name:'Diện mạo & tác phong',max:15,items:[
-    ['b1',5,'Đồng phục, thẻ tên, đầu tóc, móng tay ngắn, phụ kiện, hình xăm che kín','QĐ chương II'],
+    ['b1',5,'Đồng phục, áo bỏ vào quần, thẻ tên; nữ buộc tóc gọn đúng quy định; móng tay ngắn, phụ kiện, hình xăm che kín','QĐ chương II'],
     ['b2',5,'Tư thế đứng đúng; không dựa, ngồi; không tụ tập nói chuyện riêng','QĐ 3.1'],
     ['b3',5,'Không dùng điện thoại cá nhân khi có khách','QĐ 3.2']]},
   {g:'III',name:'Giao tiếp & phục vụ',max:20,items:[
@@ -4392,8 +4441,48 @@ var SC_IV={guide:[['g1',10,'Vệ sinh, khử khuẩn bề mặt ít nhất 2 l�
   cash:[['k1',10,'Kiểm đếm tiền, vé, vòng tay đầu và cuối ca, khớp Sapo, ký biên bản, ghi sổ','SOP 4.4A, 4.4B, 4.3F'],['k2',5,'An toàn tiền mặt; mọi giao dịch có chứng từ','SOP 4.4C, 3.3']]};
 var ATT=[['late',3,'Đi trễ ≤15 phút'],['late2',5,'Đi trễ >15 phút'],['hand',5,'Không bàn giao ca / rời ca sớm'],['noshow',20,'Bỏ ca không báo']],ATT_SHORT=5;
 /* điểm cộng: [mã, điểm/lần, tối đa/tháng, tên, cách ghi] — auto: web tự lấy; link: cần link ảnh; with: chọn NV mới được kèm */
-var BN=[['thay',2,4,'Nhận làm thay ca đột xuất','auto'],['vitri',2,2,'Học đạt thêm vị trí mới','auto'],['khen',3,6,'Khách khen đích danh','link'],['sucoan',3,3,'Xử lý xuất sắc sự cố an toàn',''],['baonguy',2,4,'Báo kịp thời nguy cơ mất an toàn',''],['kem',3,3,'Kèm nhân viên mới tới khi làm độc lập','with'],['sangkien',3,3,'Sáng kiến được áp dụng','link'],['trungthuc',2,2,'Trung thực: trả đồ, tiền khách để quên',''],['chitieu',2,2,'Vượt chỉ tiêu bán hàng được giao',''],['dientap',1,1,'Tham gia diễn tập, đào tạo, sự kiện nội bộ','']];
+var BN=[['thay',2,4,'Nhận làm thay ca đột xuất','auto'],['vitri',2,2,'Học đạt thêm vị trí mới','auto'],['khen',3,6,'Khách khen đích danh','link'],['sucoan',3,3,'Xử lý xuất sắc sự cố an toàn',''],['baonguy',2,4,'Báo kịp thời nguy cơ mất an toàn',''],['kem',3,3,'Kèm nhân viên mới tới khi làm độc lập','with'],['sangkien',3,3,'Sáng kiến được áp dụng','link'],['trungthuc',2,2,'Trung thực: trả đồ, tiền khách để quên',''],['chitieu',2,2,'Vượt chỉ tiêu bán hàng được giao (AimBox, VSR: combo / thẻ tích điểm / up thẻ)',''],['dientap',1,1,'Tham gia diễn tập, đào tạo, sự kiện nội bộ','']];
 var IV_ROLE={cash:'Thu ngân, soát vé',guide:'Hướng dẫn (khu chơi, F&B)'};
+/* 03/11/2026 (Phúc duyệt): bộ tiêu chí riêng AimBox và VS Racing, cùng khung 30/15/20/15/20 (xep-ca\Bo_tieu_chi_cham_diem_AimBox_VSR.md).
+   Mã mục có tiền tố ab_ / vs_ để không trùng chữ với Wolfoo. Thương hiệu nhận theo tên site (scBrand). Nhóm V, điểm cộng, xếp loại dùng chung.
+   Áp dụng từ tuần SC_BRAND_FROM; tuần trước đó giữ bộ Wolfoo để phiếu đã chấm không thành chấm dở. */
+var SC_BRAND_FROM='2026-11-02';
+var SC_B2=function(p,shirt){return [[p+'b1',5,shirt+', bỏ áo vào quần, quần tối màu không rách, giày thể thao, thẻ nhân viên; nữ buộc tóc gọn đúng quy định; tóc không nhuộm loè loẹt','Nội quy gian hàng 1.1'],
+  [p+'b2',5,'Không tụ tập, tán gẫu, đùa giỡn, làm việc riêng trong giờ làm','Nội quy: hành vi cấm'],[p+'b3',5,'Không dùng điện thoại cá nhân trong tầm mắt khách','Nội quy: hành vi cấm']];};
+var SC_B3=function(p,brand,c2,c3){return [[p+'c1',5,'Chào đúng câu chuẩn "'+brand+' xin chào, em có thể giúp gì cho mình ạ?" khi khách vào','Quy trình tư vấn bước 1'],[p+'c2',5,c2,'Checklist "trong ca"'],
+  [p+'c3',5,'Tư vấn đúng 5 bước: hỏi khách mới / cũ, làm hoặc xin thẻ tích điểm, giới thiệu combo All-in-one, CTKM, '+c3+'up thẻ','Quy trình tư vấn bước 2–5'],[p+'c4',5,'Khiếu nại: lắng nghe, xin lỗi, báo CHT; không tự hứa, tự hoàn tiền, tự tặng quà','Như Wolfoo QĐ 4.4']];};
+var SC_SETS={
+  wf:{groups:SC_GROUPS,iv:SC_IV,roles:['cash','guide'],def:'guide',lbl:IV_ROLE,
+    liet:'bỏ vị trí giám sát, để trẻ một mình ở khu nguy hiểm, không báo hoặc che giấu sự cố, thô bạo với trẻ'},
+  ab:{groups:[{g:'I',name:'An toàn khách & thiết bị',max:30,items:[
+      ['ab_a1',5,'Đầu ca bật điện, test toàn bộ súng, máy, hệ thống tiến lùi khu cung; thiết bị lỗi báo nhóm trước khi mở bán, không cho khách dùng','Checklist đầu ca; KV súng 1–2'],
+      ['ab_a2',10,'Phổ biến luật chơi và an toàn trước mỗi lượt; khu bắn cung bắt buộc kính, găng tay; trẻ nhỏ phải có người lớn đi kèm','Sổ tay: Bắn cung'],
+      ['ab_a3',10,'Giám sát khu liên tục: không để ai đứng trong hướng bắn / ném, không để khách chĩa súng vào người, dừng ngay hành vi nguy hiểm; không rời khu khi chưa có người thay','Sổ tay: quy tắc an toàn khu vực'],
+      ['ab_a4',5,'Sự cố: dừng khu, báo CHT / trưởng ca, ghi sổ; khách bị thương thì sơ cứu và báo CHT ngay','Sổ tay: liên hệ CHT khi có sự cố']]},
+    {g:'II',name:'Diện mạo & tác phong',max:15,items:SC_B2('ab_','Áo đồng phục AimBox')},
+    {g:'III',name:'Giao tiếp & bán hàng',max:20,items:SC_B3('ab_','AimBox','Chủ động mời khách; khi vắng tạo tiếng, tạo không khí (bắn súng, bật nhạc); vị trí nào cũng giải đáp được giá vé, dịch vụ','giải đấu, ')},
+    {g:'IV',name:'Nghiệp vụ vị trí & vệ sinh',max:15,items:[]}],
+    iv:{cash:[['ab_k1',10,'Đầu ca kiểm tồn quỹ, thẻ nạp, đạn; 21h45 dừng bán, đếm tiền mặt + chuyển khoản khớp POS365, kiểm tồn túi đạn, chụp báo cáo gửi nhóm','Checklist thu ngân'],['ab_k2',5,'Thu đúng, đủ, mọi giao dịch có hoá đơn; trả tiền lẻ về túi quỹ; quầy sạch, gọn khi bàn giao','Checklist thu ngân']],
+      gift:[['ab_q1',10,'Kiểm đạn đầu ca báo thu ngân; kiểm quà tồn đầu / cuối, tổng hợp mốc quà trúng, báo cáo quà và G-point có ảnh; đổi quà đúng số điểm, quà khớp số lượng','Checklist KV súng; Sổ tay Redemption'],['ab_q2',5,'Lau súng, bàn bắn, kệ quà; cuối ca quét đạn, gói túi đạn, thu rác','Checklist KV súng']],
+      game:[['ab_g1',10,'Soát vé đúng, hướng dẫn cách chơi; nhặt bóng, tên trả đúng chỗ; cuối ca kiểm số vé, báo cáo quà mất, tồn đầu, tồn cuối, G-point','Checklist khu thể thao'],['ab_g2',5,'Xếp bóng golf, dán điểm bia, dụng cụ đúng vị trí; vệ sinh khu, đem rác về điểm tập kết','Checklist khu thể thao']]},
+    roles:['cash','gift','game'],def:'game',lbl:{cash:'Thu ngân',gift:'Bắn súng & đổi quà',game:'Khu thể thao (Carnival)'},
+    liet:'cho khách bắn / ném khi có người trong khu đích, cho bắn cung không đồ bảo hộ, không báo hoặc che giấu sự cố'},
+  vs:{groups:[{g:'I',name:'An toàn đường đua',max:30,items:[
+      ['vs_a1',5,'Đầu ca kiểm từng xe (phanh, ga, vô lăng, dây an toàn, lốp, cảm biến) và rào, lốp đệm đường đua; xe lỗi rút khỏi vận hành, ghi sổ','HD-01, HD-05'],
+      ['vs_a2',10,'Phổ biến an toàn đủ 5 bước kịch bản trước mỗi lượt; kiểm từng khách: nón cài quai, dây an toàn đã cài; không cho chạy khách không đủ điều kiện','Kịch bản Gokart 1–5'],
+      ['vs_a3',10,'Điều phối: luôn quan sát đường đua, dùng cờ đúng hiệu lệnh, xuất phát lần lượt, nhắc / dừng khách vượt ẩu, cố ý va chạm; không rời vị trí khi còn xe chạy','Kịch bản mục 3, 5'],
+      ['vs_a4',5,'Sự cố: dừng toàn bộ xe, tiếp cận khách, không để khách tự xuống giữa đường đua; sơ cứu, báo CHT, ghi sổ sự cố','Kịch bản mục 4; HD-05']]},
+    {g:'II',name:'Diện mạo & tác phong',max:15,items:SC_B2('vs_','Áo đồng phục VS Racing')},
+    {g:'III',name:'Giao tiếp & bán hàng',max:20,items:SC_B3('vs_','VS Racing','Chủ động mời khách; hướng dẫn khách xếp hàng, báo thời gian chờ lượt; vị trí nào cũng giải đáp được giá vé, dịch vụ','giải VSRacing Championship, ')},
+    {g:'IV',name:'Nghiệp vụ vị trí & vệ sinh',max:15,items:[]}],
+    iv:{cash:[['vs_k1',10,'Chốt POS / quỹ cuối ca, đối chiếu QR / thẻ, 2 người cùng đếm, quỹ khớp','HD-11'],['vs_k2',5,'Mọi lượt chạy có hoá đơn / vé; số lượt bán khớp số lượt chạy trên đường đua; quầy gọn','HD-10, chống thất thoát']],
+      track:[['vs_t1',10,'Chỉ cho chạy khi có vé hợp lệ, đúng số vòng / phút; ghi số lượt chạy từng ca để quầy đối chiếu','HD-02, HD-10'],['vs_t2',5,'Lau xe (thân, ghế, vô lăng), nón trước giờ mở và giữa ca; cuối ca đưa xe về khu đỗ, tắt thiết bị theo quy định','HD-03, HD-11']],
+      tech:[['vs_m1',10,'Sửa, bảo dưỡng đúng lịch, ghi sổ từng xe; xe sau sửa phải chạy thử trước khi trả vận hành','HD-05, HD-06'],['vs_m2',5,'CCDC, vật tư ghi sổ vào / ra khớp thực tế; khu kỹ thuật gọn, an toàn','HD-04']]},
+    roles:['cash','track','tech'],def:'track',lbl:{cash:'Quầy (thu ngân, tư vấn)',track:'Điều phối đường đua',tech:'Kỹ thuật'},
+    liet:'cho khách chạy khi chưa đội nón / chưa cài dây an toàn, đưa xe đang báo lỗi phanh hoặc ga ra chạy, không báo hoặc che giấu sự cố'}};
+function scBrand(s){var nm=(s&&s.site)||'';if(!nm&&s&&typeof SITES!=='undefined'){var f=SITES.filter(function(x){return x.key===s.siteKey;})[0];nm=f?f.name:'';}
+  var n=norm(nm);return n.indexOf('aimbox')>=0||n.indexOf('aim box')>=0?'ab':n.indexOf('racing')>=0||/\bvsr\b/.test(n)||n.indexOf('gokart')>=0||n.indexOf('go kart')>=0?'vs':'wf';}
+function scSet(s,wk){return SC_SETS[wk&&wk<SC_BRAND_FROM?'wf':scBrand(s)];}
 var GOAL={w75:'Điểm tuần từ 75 trở lên ở mọi tuần trong kỳ',safe:'Nhóm An toàn đạt đủ 30/30 ở mọi tuần',att:'Không có lỗi chuyên cần trong kỳ'};
 var HRD={};
 HR.sv='week';HR.scWk=(function(){var t=todayKey();return dow(t)<=1?addDays(mondayOf(new Date()),-7):mondayOf(new Date());})();HR.ym=todayKey().slice(0,7);
@@ -4404,25 +4493,28 @@ function meName(){return (window.XC_ME&&(window.XC_ME.name||window.XC_ME.user))|
 function attType(t){for(var i=0;i<ATT.length;i++)if(ATT[i][0]===t)return ATT[i];return null;}
 function bnType(t){for(var i=0;i<BN.length;i++)if(BN[i][0]===t)return BN[i];return null;}
 /* nghiệp vụ thu ngân: Thu ngân và Soát vé (giữ vé, vòng tay, tiền theo SOP 4.4C); các vị trí khác là hướng dẫn */
-function posRole(s,pid){var n=norm(posName(s,pid));return n.indexOf('thu ngan')>=0||n.indexOf('cashier')>=0||n.indexOf('soat ve')>=0?'cash':'guide';}
+function posRole(s,pid,wk){var n=norm(posName(s,pid)),b=wk&&wk<SC_BRAND_FROM?'wf':scBrand(s),has=function(L){return L.some(function(w){return n.indexOf(w)>=0;});};
+  if(b==='ab')return has(['thu ngan','cashier','quay'])?'cash':has(['sung','qua','redemp','aim'])?'gift':'game';
+  if(b==='vs')return has(['thu ngan','cashier','quay','ban ve'])?'cash':has(['ky thuat','sua','bao duong','tech'])?'tech':'track';
+  return has(['thu ngan','cashier','soat ve'])?'cash':'guide';}
 /* nghiệp vụ nhóm IV trong tuần: theo các vị trí đã xếp trong tuần (có thể cả thu ngân và hướng dẫn); chưa có lịch thì theo vị trí ưu tiên; CHT chỉnh được (e.iv) */
 function weekRoles(s,st,wk){
-  var r={};withSite(s,function(){for(var d=0;d<7;d++){var c=getCell(wk,st.id,d);if(c&&c.s!=='O')posList(c).forEach(function(pid){if(posName(s,pid))r[posRole(s,pid)]=1;});}});
-  var L=['cash','guide'].filter(function(k){return r[k];});return L.length?L:[st.skills[0]?posRole(s,st.skills[0]):'guide'];
+  var r={};withSite(s,function(){for(var d=0;d<7;d++){var c=getCell(wk,st.id,d);if(c&&c.s!=='O')posList(c).forEach(function(pid){if(posName(s,pid))r[posRole(s,pid,wk)]=1;});}});
+  var T=scSet(s,wk),L=T.roles.filter(function(k){return r[k];});return L.length?L:[st.skills[0]?posRole(s,st.skills[0],wk):T.def];
 }
-function ivRoles(s,st,wk,e){return e&&e.iv&&e.iv.length?e.iv:weekRoles(s,st,wk);}
+function ivRoles(s,st,wk,e){var R=scSet(s,wk).roles,L=e&&e.iv?e.iv.filter(function(k){return R.indexOf(k)>=0;}):[];return L.length?L:weekRoles(s,st,wk);}
 /* các mục chấm của một người trong tuần; không truyền tuần thì trả mọi mục (để chọn mục cần cải thiện) */
 function scItems(s,st,wk,e){
-  var roles=wk?ivRoles(s,st,wk,e):['cash','guide'],out=[];
-  SC_GROUPS.forEach(function(G){
+  var T=scSet(s,wk),roles=wk?ivRoles(s,st,wk,e):T.roles,out=[];
+  T.groups.forEach(function(G){
     if(G.g!=='IV'){G.items.forEach(function(it){out.push({id:it[0],p:it[1],t:it[2],src:it[3],g:G.g});});return;}
-    roles.forEach(function(k){SC_IV[k].forEach(function(it){out.push({id:it[0],p:it[1],t:it[2],src:it[3],g:'IV',role:k});});});
+    roles.forEach(function(k){T.iv[k].forEach(function(it){out.push({id:it[0],p:it[1],t:it[2],src:it[3],g:'IV',role:k});});});
   });
   return out;
 }
 /* điểm của một mục: số nguyên 0 → tối đa */
 function mval(it,v){if(v==null||v==='')return null;var n=+v;return isNaN(n)?null:Math.max(0,Math.min(it.p,n));}
-function itemText(id){var r='';SC_GROUPS.concat([{items:SC_IV.cash.concat(SC_IV.guide)}]).forEach(function(G){G.items.forEach(function(it){if(it[0]===id)r=it[2];});});if(id==='att')r='Chuyên cần & kỷ luật ca';return r||id;}
+function itemText(id){var r='';Object.keys(SC_SETS).forEach(function(b){var T=SC_SETS[b];T.groups.concat(Object.keys(T.iv).map(function(k){return {items:T.iv[k]};})).forEach(function(G){G.items.forEach(function(it){if(it[0]===id)r=it[2];});});});if(id==='att')r='Chuyên cần & kỷ luật ca';return r||id;}
 function scDeadline(wk){var a=wk.split('-').map(Number);return Date.UTC(a[0],a[1]-1,a[2]+7,5,0,0);}
 function scLocked(uid,wk){if(ROLE==='mgr'&&!OFFICE)return false;var d=HRD[uid]&&HRD[uid].sc[wk],open=d&&d.reopen&&new Date(d.reopen).getTime()>Date.now();return Date.now()>scDeadline(wk)&&!open;}
 function scEntry(uid,wk,sid){var d=HRD[uid]&&HRD[uid].sc[wk];return (d&&d.staff&&d.staff[sid])||null;}
@@ -4637,23 +4729,23 @@ function scDraftFor(x,st,wk){
   return D;
 }
 function renderScForm(x,st,wk,ro){
-  var D=scDraftFor(x,st,wk),e=D.e,c=scCalc(x.s,st,wk,e),items=scItems(x.s,st,wk,e),days=weekDays(x.s,st,wk),dis=ro?' disabled':'';
-  var h='<section class="panel scform" id="sc-form"><div class="panel-h split"><div><div class="eyebrow">Phiếu chấm tuần '+isoWeek(wk)+' · '+dm(wk)+' – '+dmy(addDays(wk,6))+'</div><h2>'+esc(st.name)+' <span class="code">'+esc(st.code||'')+'</span> <span class="pill">'+esc(st.role)+'</span></h2><p>'+esc(posName(x.s,st.skills[0])||'Chưa có vị trí')+' · làm '+days+' ngày trong tuần'+' · nghiệp vụ tuần này: '+esc(c.roles.map(function(k){return IV_ROLE[k];}).join(' + '))+'</p></div>'
+  var TS=scSet(x.s,wk),D=scDraftFor(x,st,wk),e=D.e,c=scCalc(x.s,st,wk,e),items=scItems(x.s,st,wk,e),days=weekDays(x.s,st,wk),dis=ro?' disabled':'';
+  var h='<section class="panel scform" id="sc-form"><div class="panel-h split"><div><div class="eyebrow">Phiếu chấm tuần '+isoWeek(wk)+' · '+dm(wk)+' – '+dmy(addDays(wk,6))+'</div><h2>'+esc(st.name)+' <span class="code">'+esc(st.code||'')+'</span> <span class="pill">'+esc(st.role)+'</span></h2><p>'+esc(posName(x.s,st.skills[0])||'Chưa có vị trí')+' · làm '+days+' ngày trong tuần'+' · nghiệp vụ tuần này: '+esc(c.roles.map(function(k){return TS.lbl[k];}).join(' + '))+'</p></div>'
     +'<div class="scbig"><span>'+(c.state==='done'?'Tổng điểm':'Đã chấm '+c.marked+'/'+c.need+' mục')+'</span><b>'+(c.state==='done'?fmtSc(c.total):c.state==='skip'?'—':'…')+'</b>'+(c.state==='done'?'<span class="pill '+scGrade(c.total)[1]+'">'+scGrade(c.total)[0]+'</span>':'')+'</div></div>';
   if(ro&&hrCanEdit('e_score'))h+='<p class="sm muted">Chỉ xem: '+(wk>mondayOf(new Date())?'tuần chưa tới.':'đã quá hạn chấm. Nhờ quản lý mở lại nếu cần sửa.')+'</p>';
   if(days<2||e.skip)h+='<label class="chk"><input type="checkbox" data-scf="skip"'+(e.skip?' checked':'')+dis+'><span>Không chấm tuần này (làm dưới 2 ngày). Tuần này không tính vào điểm tháng.</span></label>';
   if(!e.skip){
-    SC_GROUPS.forEach(function(G){
+    TS.groups.forEach(function(G){
       var its=items.filter(function(it){return it.g===G.g;});
       h+='<div class="scg"><div class="scgh"><h3 class="sub">'+G.g+'. '+G.name+'</h3><span class="mono sm">'+fmtSc(c.g[G.g])+' / '+G.max+'</span>'+(ro?'':'<button class="btn sm" data-act="scall" data-v="'+G.g+'">Tối đa cả nhóm</button>')+'</div>';
-      if(G.g==='IV')h+='<div class="row sm"><span class="muted">Nghiệp vụ tuần này (web lấy theo vị trí đã xếp, sửa được):</span>'+['cash','guide'].map(function(k){var on=c.roles.indexOf(k)>=0;return '<button class="skill'+(on?' on fixon':'')+'" data-act="sciv" data-v="'+k+'" aria-pressed="'+on+'"'+dis+'>'+IV_ROLE[k]+'</button>';}).join('')+(c.roles.length>1?'<span class="muted">Làm 2 nghiệp vụ: nhóm IV = trung bình ('+c.roles.map(function(k){return IV_ROLE[k].split(' (')[0]+' '+fmtSc(c.iv[k]||0)+'/15';}).join(', ')+')</span>':'')+'</div>';
+      if(G.g==='IV')h+='<div class="row sm"><span class="muted">Nghiệp vụ tuần này (web lấy theo vị trí đã xếp, sửa được):</span>'+TS.roles.map(function(k){var on=c.roles.indexOf(k)>=0;return '<button class="skill'+(on?' on fixon':'')+'" data-act="sciv" data-v="'+k+'" aria-pressed="'+on+'"'+dis+'>'+TS.lbl[k]+'</button>';}).join('')+(c.roles.length>1?'<span class="muted">Làm '+c.roles.length+' nghiệp vụ: nhóm IV = trung bình ('+c.roles.map(function(k){return TS.lbl[k].split(' (')[0]+' '+fmtSc(c.iv[k]||0)+'/15';}).join(', ')+')</span>':'')+'</div>';
       its.forEach(function(it,ii){var v=mval(it,e.m[it.id]),pts=[];for(var k=0;k<=it.p;k++)pts.push(k);
-        if(c.roles.length>1&&it.role&&(ii===0||its[ii-1].role!==it.role))h+='<div class="sm" style="margin-top:6px"><b>'+IV_ROLE[it.role]+'</b></div>';
+        if(c.roles.length>1&&it.role&&(ii===0||its[ii-1].role!==it.role))h+='<div class="sm" style="margin-top:6px"><b>'+TS.lbl[it.role]+'</b></div>';
         h+='<div class="scitem"><div><span>'+esc(it.t)+'</span> <span class="sm muted">· tối đa '+it.p+' điểm · '+esc(it.src)+'</span></div><div class="seg pts" role="group" aria-label="'+esc(it.t)+'">'
           +pts.map(function(k){var cls=k===it.p?'d':k===0?'x':'n';return '<button class="'+cls+(v===k?' on':'')+'" data-act="scmark" data-id="'+it.id+'" data-v="'+k+'" aria-pressed="'+(v===k)+'"'+dis+'>'+k+'</button>';}).join('')+'</div>'
           +(v!=null&&v<it.p?'<input class="in'+(e.n[it.id]?'':' need')+'" data-scn="'+it.id+'" value="'+esc(e.n[it.id]||'')+'" placeholder="Bị trừ điểm: ghi sự việc (bắt buộc), ngày, ca, việc gì" maxlength="300"'+dis+'>':'')+'</div>';
       });
-      if(G.g==='I')h+='<div class="liet"><label class="chk"><input type="checkbox" data-scf="liet"'+(e.liet!=null&&e.liet!==false?' checked':'')+dis+'><span><b>Điểm liệt an toàn</b>: bỏ vị trí giám sát, để trẻ một mình ở khu nguy hiểm, không báo hoặc che giấu sự cố, thô bạo với trẻ. Nhóm I = 0, điểm tuần tối đa 59, tháng này không có điểm cộng, quản lý được cảnh báo ngay.</span></label>'
+      if(G.g==='I')h+='<div class="liet"><label class="chk"><input type="checkbox" data-scf="liet"'+(e.liet!=null&&e.liet!==false?' checked':'')+dis+'><span><b>Điểm liệt an toàn</b>: '+TS.liet+'. Nhóm I = 0, điểm tuần tối đa 59, tháng này không có điểm cộng, quản lý được cảnh báo ngay.</span></label>'
         +(e.liet!=null&&e.liet!==false?'<input class="in'+(e.liet?'':' need')+'" data-scl="1" value="'+esc(e.liet||'')+'" placeholder="Ghi sự việc (bắt buộc)" maxlength="300"'+dis+'>':'')+'</div>';
       h+='</div>';
     });
@@ -4954,7 +5046,7 @@ $app.addEventListener('click',function(e){
   x=scX();
   if(a==='scmark'&&HR.scDraft){HR.scDraft.e.m[id]=+v;render();return;}
   if(a==='scall'&&HR.scDraft){var st0=x.s.staff.filter(function(s){return s.id===HR.scDraft.sid;})[0];scItems(x.s,st0,HR.scDraft.wk,HR.scDraft.e).forEach(function(it){if(it.g===v)HR.scDraft.e.m[it.id]=it.p;});render();return;}
-  if(a==='sciv'&&HR.scDraft){var st1=x.s.staff.filter(function(s){return s.id===HR.scDraft.sid;})[0],R=ivRoles(x.s,st1,HR.scDraft.wk,HR.scDraft.e).slice(),ri=R.indexOf(v);if(ri>=0){if(R.length===1){toast('Cần ít nhất 1 nghiệp vụ.');return;}R.splice(ri,1);}else R.push(v);HR.scDraft.e.iv=['cash','guide'].filter(function(k){return R.indexOf(k)>=0;});render();return;}
+  if(a==='sciv'&&HR.scDraft){var st1=x.s.staff.filter(function(s){return s.id===HR.scDraft.sid;})[0],R=ivRoles(x.s,st1,HR.scDraft.wk,HR.scDraft.e).slice(),ri=R.indexOf(v);if(ri>=0){if(R.length===1){toast('Cần ít nhất 1 nghiệp vụ.');return;}R.splice(ri,1);}else R.push(v);HR.scDraft.e.iv=scSet(x.s,HR.scDraft.wk).roles.filter(function(k){return R.indexOf(k)>=0;});render();return;}
   if(a==='scattadd'&&HR.scDraft){var t=document.getElementById('sc-att-t').value,d=+document.getElementById('sc-att-d').value,n=String(document.getElementById('sc-att-n').value||'').trim();HR.scDraft.e.att.push({t:t,day:d,note:n,by:meName()});render();return;}
   if(a==='scattdel'&&HR.scDraft){HR.scDraft.e.att.splice(+v,1);render();return;}
   if(a==='scexon'&&HR.scDraft){HR.scDraft.e.ex[id]='';render();var el=document.querySelector('[data-scex="'+id+'"]');if(el)el.focus();return;}
@@ -5131,7 +5223,7 @@ function exportSchedXlsx(k,onlyWorking){
     var rw=4;
     for(var d2=0;d2<7;d2++){var first=rw;
       S.shifts.forEach(function(sh){S.positions.forEach(function(p){
-        var who=rows.filter(function(r){var c=getCell(k,r.st.id,d2);return c&&c.s!=='O'&&covers(c.s,sh.id)&&posOf(c,sh.id)===p.id;}).map(function(r){return r.st.name;});
+        var who=rows.filter(function(r){var c=getCell(k,r.st.id,d2);return c&&c.s&&c.s!=='O'&&cellCredit(c,d2)[sh.id]===p.id;}).map(function(r){return r.st.name;});
         if(!who.length)return;
         [rw===first?DAY_FULL[d2]+' '+dm(addDays(k,d2)):'',sh.name,sh.time,p.name,who.join(', ')].forEach(function(v,j){var c=wd.getCell(rw,j+1);c.value=v;c.alignment={vertical:'top',wrapText:true};c.border=border;});
         xFill(wd.getCell(rw,4),'FF'+PCOL[p.c%8][0].slice(1));wd.getCell(rw,1).font={name:'Arial',bold:true};rw++;});});
@@ -6095,7 +6187,7 @@ function atomsByTime(){return atomShifts().slice().sort(function(a,b){var x=shif
 /* người làm ca sh ở vị trí pid ngày d */
 function slotPeople(k,d,shId,pid){
   var out=[];
-  S.staff.forEach(function(st){var c=getCell(k,st.id,d);if(!c||!c.s||c.s==='O'||!covers(c.s,shId)||posOf(c,shId)!==pid)return;out.push({st:st,c:c});});
+  S.staff.forEach(function(st){var c=getCell(k,st.id,d);if(!c||!c.s||c.s==='O'||cellCredit(c,d)[shId]!==pid)return;out.push({st:st,c:c});});
   return out.sort(function(a,b){return skillRank(a.st,pid)-skillRank(b.st,pid)||ordIdx(a.st,pid)-ordIdx(b.st,pid)||a.st.name.localeCompare(b.st.name);});
 }
 function viewToggle(){
@@ -6378,7 +6470,7 @@ function trimOver(k){
     var need=needF(d,sh.id,p.id);
     for(var guard=0;guard<20;guard++){
       var L=slotPeople(k,d,sh.id,p.id);if(L.length<=need)break;
-      var cand=L.filter(function(x){if(x.c.sw||leaveOn(x.st.id,k,d))return false;var ids=shiftsOf(x.c.s),rest=ids.filter(function(z){return z!==sh.id;});return !rest.length||!isSplit(units(rest))||isSplit(units(ids));});
+      var cand=L.filter(function(x){if(x.c.sw||leaveOn(x.st.id,k,d))return false;var ids=shiftsOf(x.c.s);if(ids.indexOf(sh.id)<0)return false;var rest=ids.filter(function(z){return z!==sh.id;});return !rest.length||!isSplit(units(rest))||isSplit(units(ids));});
       if(!cand.length)break;
       cand.sort(function(a,b){return skillRank(b.st,p.id)-skillRank(a.st,p.id)||ordIdx(b.st,p.id)-ordIdx(a.st,p.id)||fairR(b.st,k)-fairR(a.st,k);});
       removeAtom(k,cand[0].st.id,d,sh.id);
@@ -6395,7 +6487,7 @@ $app.addEventListener('click',function(e){
   if(b.dataset.act==='trimover'){
     var k=view.week;
     if(view.confirm!=='trimover'){view.confirm='trimover';render();return;}
-    view.confirm=null;var n=trimOver(k);if(n)markDirty();render();toast(n?'Đã gỡ '+n+' lượt dư. Người bị gỡ ca vẫn còn trong đăng ký, có thể xếp lại.':'Không gỡ được lượt dư nào (ca ở giữa khối hoặc ô đổi ca / nghỉ phép).',7000);return;
+    view.confirm=null;var n=trimOver(k);if(n)markDirty();render();toast(n?'Đã gỡ '+n+' lượt dư. Người bị gỡ ca vẫn còn trong đăng ký, có thể xếp lại.':'Không gỡ được lượt dư nào (ca ở giữa khối, người làm ca dài phủ qua nhiều ca ngắn, hoặc ô đổi ca / nghỉ phép). Sửa tay ở Lịch tuần nếu cần.',7000);return;
   }
 });
 document.addEventListener('click',function(e){var el=document.getElementById('slotpop');if(el&&!el.contains(e.target)&&!e.target.closest('[data-act="bslot"]'))closeSlotPop();},true);
@@ -6720,7 +6812,7 @@ function buildLtWb(EJ,k){
   S.positions.forEach(function(p,i){var a=g.getCell(pr+1+i,1);a.value=p.name;a.font={name:'Arial',size:10,bold:true};xFill(a,posArgb(p));g.getCell(pr+1+i,2).value=p.short;g.getCell(pr+1+i,5).value=posHold(p.id)?'Xếp trước, không tách ca: mỗi người đứng 1 khối ca liền để ít lần bàn giao':'';});
   return wb;
 }
-function exportLtFile(k){withExcel(function(EJ){return buildLtWb(EJ,k);},ltSlug(k));}
+function exportLtFile(k){withExcel(function(EJ){return atWeek(k,function(){return buildLtWb(EJ,k);});},ltSlug(k));}
 
 /* ---------- đọc file ----------
    2 dạng (28/10: Phúc cần nhập lịch cũ từ MISA để tính lương, file MISA chỉ có mã ca):
@@ -6902,7 +6994,7 @@ function ltCell(st,dk,ca,pt){
    mỗi người 1 vị trí cả ngày: vị trí đã đào tạo còn thiếu nhiều nhất trong các ca người đó làm; không thiếu thì vị trí ưu tiên 1 */
 function ltAutoPos(R){
   var inFile={};R.recs.forEach(function(rec){inFile[rec.st.id]=rec;});
-  R.dates.forEach(function(dk){
+  R.dates.forEach(function(dk){atWeek(mondayOf(parseKey(dk)),function(){
     var k=mondayOf(parseKey(dk)),d=dow(dk),cov={};
     var add=function(c){shiftsOf(c.s).forEach(function(id){var p=posOf(c,id);if(!p)return;var key=id+'|'+p;cov[key]=(cov[key]||0)+1;});};
     S.staff.forEach(function(st){var rec=inFile[st.id],x=rec&&rec.cells[dk];if(x&&!x.keep){if(x.c&&x.c.s&&x.c.s!=='O'&&!x.auto)add(x.c);return;}var c=getCell(k,st.id,d);if(c&&c.s&&c.s!=='O')add(c);});
@@ -6911,7 +7003,7 @@ function ltAutoPos(R){
       .forEach(function(rec){var x=rec.cells[dk],ids=shiftsOf(x.c.s),best=null,bg=0;
         rec.st.skills.forEach(function(pid){if(!pos(pid))return;var g=0;ids.forEach(function(id){g+=Math.max(0,needF(d,id,pid)-(cov[id+'|'+pid]||0));});if(g>bg){bg=g;best=pid;}});
         x.c.p=best||rec.st.skills.filter(function(pid){return pos(pid);})[0];add(x.c);});
-  });
+  });});
   return R;
 }
 function readLtFile(file){
@@ -9367,7 +9459,7 @@ $app.addEventListener('input',function(e){
 });
 
 /* ---------- vẽ trang ---------- */
-var RO_OK={paylive:1,paylockxlsx:1,paylock:1,payunlock:1,dcopen:1,xctab:1,grp:1,mod:1,hrprof:1,unlock:1,relock:1,lockweek:1,unlockweek:1,staffsched:1,misaweek:1,misaxlsx:1,tab:1,prev:1,next:1,today:1,payweek:1,paymonth:1,kpweek:1,kpmonth:1,kpxlsx:1,payxlsx:1,paycopy:1,payft:1,paydetail:1,kpcopy:1,swf:1,mgrback:1,whylocal:1,exportsetup:1,regfile:1,retrysave:1};
+var RO_OK={paylive:1,paylockxlsx:1,paylock:1,payunlock:1,dcopen:1,xctab:1,grp:1,mod:1,hrprof:1,unlock:1,relock:1,lockweek:1,unlockweek:1,staffsched:1,misaweek:1,misaxlsx:1,tab:1,prev:1,next:1,today:1,payweek:1,paymonth:1,kpweek:1,kpmonth:1,kpxlsx:1,payxlsx:1,paycopy:1,payft:1,paydetail:1,kpcopy:1,swf:1,mgrback:1,whylocal:1,exportsetup:1,regfile:1,retrysave:1,demlv:1,demy:1};
 function lockReadonly(){
   var els=$app.querySelectorAll('input,select,textarea,button');
   for(var i=0;i<els.length;i++){var el=els[i],ds=el.dataset||{};if(ds.pay||ds.kp||ds.kpinc||ds.flt||ds.xf)continue;if(el.tagName==='BUTTON'&&RO_OK[ds.act])continue;if(el.closest('.mnav,.subnav'))continue;el.disabled=true;} /* 31/10: không khoá menu, để vẫn chuyển được mục */
@@ -9647,7 +9739,7 @@ function bindImport(m){
 }
 
 /* ---------- thao tác ---------- */
-var CONFIRM={stopdel:1,paylock:1,payunlock:1,unlockweek:1,fixfromreg:1,copyprev:1,clear:1,delstaff:1,delpos:1,clearsample:1,undo:1,lcancel:1,regclear:1,swundo:1,delshift:1,quit:1};
+var CONFIRM={stopdel:1,paylock:1,payunlock:1,unlockweek:1,fixfromreg:1,copyprev:1,clear:1,delstaff:1,delpos:1,clearsample:1,undo:1,lcancel:1,regclear:1,swundo:1,delshift:1,quit:1,demlvdel:1};
 $app.addEventListener('click',function(e){
   var b=e.target.closest('[data-act]'),act=b?b.dataset.act:null;
   var key=b?act+(b.dataset.id?':'+b.dataset.id:''):null;
@@ -9749,14 +9841,17 @@ $app.addEventListener('click',function(e){
       view.confirm=null;var pid=b.dataset.id;
       S.positions=S.positions.filter(function(p){return p.id!==pid;});
       S.staff.forEach(function(x){x.skills=x.skills.filter(function(y){return y!==pid;});});
-      S.demand.forEach(function(dd2){Object.keys(dd2).forEach(function(sh){delete dd2[sh][pid];});});
+      demAll().forEach(function(dd2){Object.keys(dd2).forEach(function(sh){delete dd2[sh][pid];});});
       var lpn=0;Object.keys(S.weeks).forEach(function(wk){lpn+=fixLostPos(wk);});
       markDirty();render();if(lpn)toast('Đã chuyển '+lpn+' ca đang xếp ở vị trí vừa xoá sang vị trí khác mà nhân viên đã đào tạo.',7000);break;
     case 'addpos':
       var np={id:'p'+rid().slice(0,6),name:'Vị trí mới',short:'VT',c:freeColor()};S.positions.push(np);markDirty();render();
       var pi=document.getElementById('pname-'+np.id);if(pi){pi.focus();pi.select();}break;
-    case 'copywd':for(i=1;i<5;i++)S.demand[i]=clone(S.demand[0]);markDirty();render();toast('Đã chép định biên T2 sang T3–T6.');break;
-    case 'copysat':S.demand[6]=clone(S.demand[5]);markDirty();render();toast('Đã chép định biên T7 sang CN.');break;
+    case 'copywd':var DT=demEdit();for(i=1;i<5;i++)DT[i]=clone(DT[0]);markDirty();render();toast('Đã chép định biên '+lvName(demLvEd())+' T2 sang T3–T6.');break;
+    case 'copysat':var DT2=demEdit();DT2[6]=clone(DT2[5]);markDirty();render();toast('Đã chép định biên '+lvName(demLvEd())+' T7 sang CN.');break;
+    case 'demlv':view.demLv=b.dataset.v==='std'?null:b.dataset.v;render();break;
+    case 'demy':view.demY=(view.demY||+todayKey().slice(0,4))+(+b.dataset.v);render();break;
+    case 'demlvdel':if(!canEdit())break;if(view.confirm!==key){view.confirm=key;render();break;}view.confirm=null;if(S.demandLv)delete S.demandLv[b.dataset.id];markDirty();render();toast('Đã bỏ bảng '+lvName(b.dataset.id)+': tháng chọn mức này dùng bảng Thường.');break;
     case 'undo':
       if(view.confirm!==key){view.confirm=key;render();break;}
       view.confirm=null;L=S.leaves[b.dataset.id];if(!L)break;
@@ -9829,8 +9924,8 @@ $app.addEventListener('input',function(e){
   }
   else if(f==='dem'){
     v=Math.max(0,Math.min(30,parseInt(t.value,10)||0));var d=+ds.d;
-    var row=S.demand[d]||(S.demand[d]={}),cell=row[ds.sh]||(row[ds.sh]={});cell[ds.p]=v;
-    var tots=$app.querySelectorAll('[data-tot]');for(var x=0;x<tots.length;x++){var a=tots[x].dataset.tot.split(':');tots[x].textContent=demTotal(+a[0],a[1]);}
+    var DE=demEdit(),row=DE[d]||(DE[d]={}),cell=row[ds.sh]||(row[ds.sh]={});cell[ds.p]=v;
+    DEM_LV=demLvEd();var tots=$app.querySelectorAll('[data-tot]');for(var x=0;x<tots.length;x++){var a=tots[x].dataset.tot.split(':');tots[x].textContent=demTotal(+a[0],a[1]);}DEM_LV=null;
   }
   else if(f==='shcode'){s=shift(ds.id);if(!s)return;v=t.value.trim();s.misa=v;if(v)s.name=v;var ms2=document.getElementById('misa-status');if(ms2)ms2.innerHTML=misaStatus();}
   else if(f==='shname'){s=shift(ds.id);if(s)s.name=t.value;}
@@ -9855,6 +9950,7 @@ $app.addEventListener('change',function(e){
   else if(ds.kp){view.kp[ds.kp]=t.value;render();}
   else if(ds.kpinc){view.kp.inc=t.checked;render();}
   else if(ds.f==='kpitarget'){render();}
+  else if(ds.mlv){if(!canEdit())return;S.monthLv=S.monthLv||{};if(t.value==='std')delete S.monthLv[ds.mlv];else S.monthLv[ds.mlv]=t.value;markDirty();render();toast('Tháng '+(+ds.mlv.slice(5))+'/'+ds.mlv.slice(0,4)+': định biên '+lvName(t.value)+'.');}
   else if(ds.sw&&ds.sw!=='reason'){view.sw[ds.sw]=t.value;if(ds.sw==='date'){view.sw.a='';view.sw.b='';view.sw.date2=t.value;}else if(ds.sw==='a'){view.sw.b='';}render();}
   else if(ds.f==='scode'){render();}
 });
