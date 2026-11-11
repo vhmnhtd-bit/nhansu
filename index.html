@@ -1393,7 +1393,7 @@ body{margin:0}
 @media (max-width:600px){.ab-in{padding:6px 16px}.ab-brand small,.ab-chip span{display:none}.ab-chip{padding:3px}.ab-chip svg{display:none}}
 </style>
 <div id="xc-login" class="xc-login" hidden></div>
-<script id="xc-shim">window.XC_BUILD='2026-11-11 14:13';
+<script id="xc-shim">window.XC_BUILD='2026-11-11 14:48';
 (function(){
 'use strict';
 var TOKEN_KEY='xc_token';
@@ -4006,21 +4006,23 @@ function renderMgr(){
     +'<div class="row"><button class="btn" data-act="mgrrefresh"'+(MGR.busy?' disabled':'')+'>'+(MGR.busy?'Đang tải…':'Làm mới số liệu')+'</button><button class="btn ghost" data-act="demo" title="Mở một site có dữ liệu giả để tập dùng các chức năng. Không lưu, không ảnh hưởng dữ liệu thật.">Tập dùng với site mẫu</button></div></header>';
   if(MGR.err)h+='<p class="ierr">'+esc(MGR.err)+'</p>';
   if(!MGR.loaded)return h+'<div class="empty">Đang tải dữ liệu các site…</div></div>';
-  var rows=mgrRows(k),tn=0,tf=0,ts=0,tph=0,tpm=0,iss=0;rows.forEach(function(r){tn+=r.need;tf+=r.filled;ts+=r.short;tph+=r.ph;tpm+=r.pm;iss+=r.iss;});
+  var rows=mgrRows(k),tn=0,tf=0,ts=0,tph=0,tpm=0,iss=0,tfm=0;rows.forEach(function(r){r.F=mgrFt(r.x,k,end);tn+=r.need;tf+=r.filled;ts+=r.short;tph+=r.ph;tpm+=r.pm;iss+=r.iss;tfm+=r.F.v;});
   var fr=pct(tf,tn);
   h+='<div class="kgrid"><div class="kcard"><span>Site đang dùng công cụ</span><b>'+rows.length+'</b><span>trên '+SITES.length+' site trong danh sách</span></div>'
     +'<div class="kcard '+(fr>=95?'good':'bad')+'"><span>Đáp ứng định biên tuần (cả chuỗi)</span><b>'+fmtPct(fr)+'</b><span>'+tf+'/'+tn+' lượt</span></div>'
     +'<div class="kcard '+(ts?'bad':'good')+'"><span>Lượt thiếu người</span><b>'+ts+'</b><span>'+iss+' lưu ý nhân sự</span></div>'
-    +'<div class="kcard"><span>Giờ PT tuần</span><b>'+fmtH(tph)+'</b><span>lương PT ước tính '+fmtVND(tpm)+' đ</span></div></div>';
-  h+='<section class="panel"><div class="panel-h"><h2>Tuần '+isoWeek(k)+' theo site</h2><p>Số liệu lấy trực tiếp từ lịch CHT đã xếp. Bấm Mở để xem và sửa lịch, nhân sự, thiết lập của site (quản lý sửa được mọi site).</p></div><div class="tblwrap"><table class="tbl mgr"><thead><tr><th>Site</th><th>CHT</th><th class="n">FT / PT</th><th class="n">PT đã ĐK</th><th class="n">Đáp ứng</th><th class="n">Thiếu</th><th class="n">Dư</th><th class="n">Lưu ý</th><th class="n">Giờ PT</th><th class="n">Lương PT (đ)</th><th>MISA</th><th>CHT cập nhật</th><th></th></tr></thead><tbody>';
-  if(!rows.length)h+='<tr><td colspan="13" class="emptyrow">Chưa có CHT nào vào công cụ. Mời CHT theo hướng dẫn ở cuối trang.</td></tr>';
+    +'<div class="kcard"><span>Giờ PT tuần</span><b>'+fmtH(tph)+'</b><span>lương PT ước tính '+fmtVND(tpm)+' đ</span></div>'
+    +'<div class="kcard"><span>Lương tuần (PT + FT)</span><b>'+fmtVND(tpm+tfm)+'</b><span>FT '+fmtVND(tfm)+' đ · chia theo tuần</span></div></div>';
+  h+='<section class="panel"><div class="panel-h"><h2>Tuần '+isoWeek(k)+' theo site</h2><p>Số liệu lấy trực tiếp từ lịch CHT đã xếp. Bấm Mở để xem và sửa lịch, nhân sự, thiết lập của site (quản lý sửa được mọi site).</p></div><div class="tblwrap"><table class="tbl mgr"><thead><tr><th>Site</th><th>CHT</th><th class="n">FT / PT</th><th class="n">PT đã ĐK</th><th class="n">Đáp ứng</th><th class="n">Thiếu</th><th class="n">Dư</th><th class="n">Lưu ý</th><th class="n">Giờ PT</th><th class="n">Lương PT (đ)</th><th class="n">Lương FT (đ)</th><th class="n">Tổng lương (đ)</th><th>MISA</th><th>CHT cập nhật</th><th></th></tr></thead><tbody>';
+  if(!rows.length)h+='<tr><td colspan="15" class="emptyrow">Chưa có CHT nào vào công cụ. Mời CHT theo hướng dẫn ở cuối trang.</td></tr>';
   rows.forEach(function(r){
     var f2=pct(r.filled,r.need);
     h+='<tr><td><b>'+esc(r.name)+'</b></td><td>'+esc(MGR.names[r.x.uid]||'…')+'</td><td class="n">'+r.ft+' / '+r.pt+'</td><td class="n">'+(r.pt?r.regd+'/'+r.pt:'—')+'</td>'
-      +'<td class="n">'+(r.sched?'<span class="pill '+(f2>=r.x.s.kpiTarget?'ok':'no')+'">'+fmtPct(f2)+'</span>':'<span class="pill wait">Chưa xếp</span>')+'</td><td class="n'+(r.short?' t-short':'')+'">'+r.short+'</td><td class="n">'+r.over+'</td><td class="n">'+r.iss+'</td><td class="n">'+fmtH(r.ph)+'</td><td class="n">'+fmtVND(r.pm)+'</td>'
+      +'<td class="n">'+(r.sched?'<span class="pill '+(f2>=r.x.s.kpiTarget?'ok':'no')+'">'+fmtPct(f2)+'</span>':'<span class="pill wait">Chưa xếp</span>')+'</td><td class="n'+(r.short?' t-short':'')+'">'+r.short+'</td><td class="n">'+r.over+'</td><td class="n">'+r.iss+'</td><td class="n">'+fmtH(r.ph)+'</td><td class="n">'+fmtVND(r.pm)+'</td><td class="n">'+mgrFtCell(r.F)+'</td><td class="n"><b>'+fmtVND(r.pm+r.F.v)+'</b></td>'
       +'<td>'+({ok:'<span class="pill ok">Đã xuất</span>',stale:'<span class="pill wait">Sửa sau khi xuất</span>',no:'<span class="pill no">Chưa xuất</span>'}[r.misa]||'—')+'</td><td class="sm muted">'+(r.x.updatedAt?fmtTime(r.x.updatedAt):'—')+'</td><td><button class="btn sm" data-act="mgrview" data-id="'+esc(r.x.uid)+'">Mở</button></td></tr>';
   });
-  h+='</tbody></table></div></section>';
+  if(rows.length>1)h+='</tbody><tfoot><tr><td colspan="8">Cả chuỗi</td><td class="n">'+fmtH(tph)+'</td><td class="n">'+fmtVND(tpm)+'</td><td class="n">'+fmtVND(tfm)+'</td><td class="n">'+fmtVND(tpm+tfm)+'</td><td colspan="3"></td></tr></tfoot></table></div><p class="sm muted">Lương FT chia theo tuần: FT có lịch tính theo công làm trong tuần (lương tháng ÷ công chuẩn × công); site / người không xếp lịch thì chia đều lương tháng theo ngày. FT không có lương trong hồ sơ (vd CHP, CHT) không tính vào quỹ lương này.</p></section>';
+  else h+='</tbody></table></div></section>';
   var n0=new Date(),p=view.mkp||(view.mkp={from:keyOf(new Date(n0.getFullYear(),n0.getMonth(),1)),to:keyOf(new Date(n0.getFullYear(),n0.getMonth()+1,0))});
   var ok=p.from&&p.to&&p.from<=p.to&&countDays(p.from,p.to)<=62;
   h+='<section class="panel"><div class="panel-h"><h2>KPI định biên theo kỳ</h2><p>Đối chiếu số người đã xếp với định biên của từng site trong kỳ (chỉ tính ngày đã có lịch). File Excel tải về có công thức tự tính.</p></div>'
@@ -4028,8 +4030,8 @@ function renderMgr(){
   if(!ok)h+='<p class="ierr">Chọn khoảng ngày hợp lệ, tối đa 62 ngày.</p>';
   else{
     var K=mgrKpi(p);
-    h+='<div class="tblwrap"><table class="tbl mgr"><thead><tr><th>Site</th><th class="n">Đáp ứng định biên</th><th class="n">Mục tiêu</th><th>Kết quả</th><th class="n">Ca đạt</th><th class="n">Thiếu</th><th class="n">Dư</th><th class="n">Giờ xếp / định biên</th><th class="n">Đổi ca</th><th class="n">Giờ PT</th><th class="n">Lương PT (đ)</th></tr></thead><tbody>'
-      +K.map(function(r){var R=r.R,f3=pct(R.ok,R.need);return '<tr><td><b>'+esc(r.name)+'</b></td><td class="n">'+(R.counted?fmtPct(f3):'—')+'</td><td class="n">'+r.target+'%</td><td>'+(R.counted?'<span class="pill '+(f3>=r.target?'ok':'no')+'">'+(f3>=r.target?'Đạt':'Chưa đạt')+'</span>':'<span class="pill">Chưa có lịch</span>')+'</td><td class="n">'+R.shiftsMet+'/'+R.shifts+'</td><td class="n">'+R.short+'</td><td class="n">'+R.over+'</td><td class="n">'+fmtH(R.schedH)+' / '+fmtH(R.needH)+'</td><td class="n">'+R.swapList.length+'</td><td class="n">'+fmtH(r.ph)+'</td><td class="n">'+fmtVND(r.pm)+'</td></tr>';}).join('')
+    h+='<div class="tblwrap"><table class="tbl mgr"><thead><tr><th>Site</th><th class="n">Đáp ứng định biên</th><th class="n">Mục tiêu</th><th>Kết quả</th><th class="n">Ca đạt</th><th class="n">Thiếu</th><th class="n">Dư</th><th class="n">Giờ xếp / định biên</th><th class="n">Đổi ca</th><th class="n">Giờ PT</th><th class="n">Lương PT (đ)</th><th class="n">Lương FT (đ)</th><th class="n">Tổng lương (đ)</th></tr></thead><tbody>'
+      +K.map(function(r){var R=r.R,f3=pct(R.ok,R.need);return '<tr><td><b>'+esc(r.name)+'</b></td><td class="n">'+(R.counted?fmtPct(f3):'—')+'</td><td class="n">'+r.target+'%</td><td>'+(R.counted?'<span class="pill '+(f3>=r.target?'ok':'no')+'">'+(f3>=r.target?'Đạt':'Chưa đạt')+'</span>':'<span class="pill">Chưa có lịch</span>')+'</td><td class="n">'+R.shiftsMet+'/'+R.shifts+'</td><td class="n">'+R.short+'</td><td class="n">'+R.over+'</td><td class="n">'+fmtH(R.schedH)+' / '+fmtH(R.needH)+'</td><td class="n">'+R.swapList.length+'</td><td class="n">'+fmtH(r.ph)+'</td><td class="n">'+fmtVND(r.pm)+'</td>'+(function(){var F=mgrFt(r.x||hrSite(r.uid)||{s:null},p.from,p.to);return '<td class="n">'+mgrFtCell(F)+'</td><td class="n"><b>'+fmtVND(r.pm+F.v)+'</b></td>';})()+'</tr>';}).join('')
       +'</tbody></table></div><div class="row"><button class="btn primary" data-act="mgrxlsx">Tải Excel KPI chuỗi</button></div>';
   }
   h+='</section>';
@@ -4995,7 +4997,7 @@ function renderScWeek(x){
   var staff=x.s.staff.filter(function(st){return inWeekSt(st,wk);}).sort(function(a,b){return String(a.code||'~').localeCompare(String(b.code||'~'))||a.name.localeCompare(b.name);});
   if(HR.scSel){var st=staff.filter(function(s){return s.id===HR.scSel;})[0];if(st)h+=renderScForm(x,st,wk,ro);else HR.scSel=null;}
   var rows=staff.map(function(st){return {st:st,c:scCalc(x.s,st,wk,scEntry(x.uid,wk,st.id)),days:weekDays(x.s,st,wk)};}),nd=rows.filter(function(r){return r.c.state==='done'||r.c.state==='skip';}).length;
-  h+='<section class="panel"><div class="panel-h split"><div><h2>Phiếu '+(M?ymLabel(wk).toLowerCase():'tuần '+isoWeek(wk))+' <span class="count">'+nd+'/'+rows.length+' xong</span></h2><p>'+(M?'Mỗi tháng chấm 1 phiếu cho mỗi nhân viên, hạn '+scDlTxt(wk)+'; quá hạn thì nhờ quản lý chuỗi mở hạn. ':'')+'Mỗi mục chấm điểm nguyên từ 0 tới tối đa của mục. Mục bị trừ điểm phải ghi sự việc. Nhóm IV chấm theo nghiệp vụ thực làm trong '+U.toLowerCase()+' (thu ngân, hướng dẫn hoặc cả hai). Chuyên cần web tự tính từ nghỉ phép và các lỗi CHT ghi nhận. Mọi lần lưu đều được ghi lịch sử, không xoá được.</p></div></div>'
+  h+='<section class="panel"><div class="panel-h split"><div><h2>Phiếu '+(M?ymLabel(wk).toLowerCase():'tuần '+isoWeek(wk))+' <span class="count">'+nd+'/'+rows.length+' xong</span></h2><p>'+(M?'Mỗi tháng chấm 1 phiếu cho mỗi nhân viên, hạn '+scDlTxt(wk)+'; quá hạn thì nhờ quản lý chuỗi mở hạn. ':'')+'Mỗi mục chấm điểm nguyên từ 0 tới tối đa của mục; mục bị trừ điểm có thể ghi chú (không bắt buộc). Nhóm IV chấm theo nghiệp vụ thực làm trong '+U.toLowerCase()+' (thu ngân, hướng dẫn hoặc cả hai). Chuyên cần web tự tính từ nghỉ phép và các lỗi CHT ghi nhận. Mọi lần lưu đều được ghi lịch sử, không xoá được.</p></div></div>'
     +'<div class="tblwrap"><table class="tbl hr scw"><thead><tr><th>Nhân viên</th><th class="n hm">Ngày làm</th><th class="n hm">An toàn /30</th><th class="n hm">Diện mạo /15</th><th class="n hm">Giao tiếp /20</th><th class="n hm">Nghiệp vụ /15</th><th class="n hm">Chuyên cần /20</th><th>Tổng</th><th></th></tr></thead><tbody>';
   if(!rows.length)h+='<tr><td colspan="9" class="emptyrow">Không có nhân viên trong '+(M?'tháng':'tuần')+' này.</td></tr>';
   rows.forEach(function(r){var c=r.c,dn=c.state==='done';
@@ -5029,7 +5031,7 @@ function renderScForm(x,st,wk,ro){
         if(c.roles.length>1&&it.role&&(ii===0||its[ii-1].role!==it.role))h+='<div class="sm" style="margin-top:6px"><b>'+TS.lbl[it.role]+'</b></div>';
         h+='<div class="scitem"><div><span>'+esc(it.t)+'</span> <span class="sm muted">· tối đa '+it.p+' điểm · '+esc(it.src)+'</span></div><div class="seg pts" role="group" aria-label="'+esc(it.t)+'">'
           +pts.map(function(k){var cls=k===it.p?'d':k===0?'x':'n';return '<button class="'+cls+(v===k?' on':'')+'" data-act="scmark" data-id="'+it.id+'" data-v="'+k+'" aria-pressed="'+(v===k)+'"'+dis+'>'+k+'</button>';}).join('')+'</div>'
-          +(v!=null&&v<it.p?'<input class="in'+(e.n[it.id]?'':' need')+'" data-scn="'+it.id+'" value="'+esc(e.n[it.id]||'')+'" placeholder="Bị trừ điểm: ghi sự việc (bắt buộc), ngày, ca, việc gì" maxlength="300"'+dis+'>':'')+'</div>';
+          +(v!=null&&v<it.p?'<input class="in" data-scn="'+it.id+'" value="'+esc(e.n[it.id]||'')+'" placeholder="Ghi chú (không bắt buộc): sự việc, ngày, ca" maxlength="300"'+dis+'>':'')+'</div>';
       });
       if(G.g==='I')h+='<div class="liet"><label class="chk"><input type="checkbox" data-scf="liet"'+(e.liet!=null&&e.liet!==false?' checked':'')+dis+'><span><b>Điểm liệt an toàn</b>: '+TS.liet+'. Nhóm I = 0, điểm phiếu tối đa 59, tháng này không có điểm cộng, quản lý được cảnh báo ngay.</span></label>'
         +(e.liet!=null&&e.liet!==false?'<input class="in'+(e.liet?'':' need')+'" data-scl="1" value="'+esc(e.liet||'')+'" placeholder="Ghi sự việc (bắt buộc)" maxlength="300"'+dis+'>':'')+'</div>';
@@ -5071,7 +5073,7 @@ function renderScLog(x,st){
 }
 function scValidate(x,st){
   var e=HR.scDraft.e;if(e.skip)return '';
-  var it=scItems(x.s,st,HR.scDraft.wk,e);for(var i=0;i<it.length;i++){var v=mval(it[i],e.m[it[i].id]);if(v!=null&&v<it[i].p&&!String(e.n[it[i].id]||'').trim())return 'Mục bị trừ điểm, ghi sự việc: '+it[i].t;}
+  /* 11/11 (Phúc): chấm dưới điểm tối đa không bắt buộc ghi nhận xét */
   if(e.liet!=null&&e.liet!==false&&!String(e.liet||'').trim())return 'Ghi sự việc cho điểm liệt an toàn.';
   var ex=Object.keys(e.ex);for(var j=0;j<ex.length;j++)if(!String(e.ex[ex[j]]||'').trim())return 'Ghi lý do miễn trừ nghỉ gấp.';
   return '';
@@ -5410,7 +5412,7 @@ $app.addEventListener('click',function(e){
 });
 function scInput(e){
   var t=e.target,ds=t.dataset||{};
-  if(ds.scn&&HR.scDraft){HR.scDraft.e.n[ds.scn]=t.value;t.classList.toggle('need',!t.value.trim());return;}
+  if(ds.scn&&HR.scDraft){HR.scDraft.e.n[ds.scn]=t.value;return;}
   if(ds.scl&&HR.scDraft){HR.scDraft.e.liet=t.value;t.classList.toggle('need',!t.value.trim());return;}
   if(ds.scex&&HR.scDraft){HR.scDraft.e.ex[ds.scex]=t.value;return;}
   if(ds.scf&&HR.scDraft&&e.type==='change'){if(ds.scf==='skip')HR.scDraft.e.skip=t.checked?'Làm dưới 2 ngày':'';if(ds.scf==='liet')HR.scDraft.e.liet=t.checked?'':false;render();return;}
@@ -7852,7 +7854,7 @@ function costWeekPanel(L,M){
     +'<div class="row sm"><span class="muted">Lương FT trong tuần:</span><div class="seg"><button class="opt'+(HR.cwEven?'':' on')+'" data-act="cweven" data-v="0">Theo công làm theo lịch (không có lịch thì chia đều)</button><button class="opt'+(HR.cwEven?' on':'')+'" data-act="cweven" data-v="1">Chia đều lương tháng theo ngày</button></div></div>'
     +'<p class="sm muted">Chia đều = lương tháng ÷ số ngày của tháng × số ngày trong tuần (từ ngày vào làm đến ngày làm cuối; ngày thử việc theo lương thử việc; ngày ngừng hoạt động theo % lương ngừng việc). Theo công = lương tháng ÷ công chuẩn × công làm trong tuần.</p>'
     +'<div class="tblwrap"><table class="tbl cost-grid cwtbl"><thead><tr><th>Site</th>'+W.map(function(wk){return '<th class="n">Tuần '+isoWeek(wk)+'<div class="sm muted">'+dm(wk)+' – '+dm(addDays(wk,6))+(addDays(wk,6)<tk?'':wk>tk?' · dự kiến':' · đang chạy')+'</div></th>';}).join('')+'</tr></thead><tbody>';
-  D.forEach(function(r){h+='<tr><td><b>'+esc(r.x.name)+'</b>'+(r.w.some(function(o){return o.nos;})?'<div class="sm warnc">có FT chưa nhập lương tháng</div>':'')+'</td>'+r.w.map(function(o){return '<td class="n">'+cell(o)+'</td>';}).join('')+'</tr>';});
+  D.forEach(function(r){h+='<tr><td><b>'+esc(r.x.name)+'</b>'+(r.w.some(function(o){return o.nos;})?'<div class="sm muted">FT không có lương trong hồ sơ: không tính</div>':'')+'</td>'+r.w.map(function(o){return '<td class="n">'+cell(o)+'</td>';}).join('')+'</tr>';});
   if(D.length>1)h+='</tbody><tfoot><tr><td>Cả chuỗi</td>'+T.map(function(t){return '<td class="n">'+cell(t)+'</td>';}).join('')+'</tr></tfoot>';else h+='</tbody>';
   HR._cw={ym:ym,W:W,D:D,T:T};
   return h+'</table></div></section>';
@@ -9861,6 +9863,12 @@ $app.addEventListener('click',function(e){var b=e.target.closest('[data-act]');i
   if(a==='stdone'){view.stEdit=null;render();return;}
   if(a==='stall'){if(!view.stAll)unl();view.stAll=!view.stAll;view.stEdit=null;render();return;}
 });
+
+/* ---------- 11/11/2026 (Phúc): Tổng quan các site có lương FT theo tuần / theo kỳ ----------
+   Dùng ftWeekRows (theo công nếu có lịch, không có lịch thì chia đều theo ngày). FT không có lương trong hồ sơ (CHP, CHT…) không tính vào quỹ lương. */
+function mgrFt(x,a,b){if(!x||!x.s)return {v:0,n:0,deu:false,skip:0};var F=ftWeekRows(x,a,b),o={v:0,n:0,deu:false,skip:0};
+  F.forEach(function(f){if(f.nos){o.skip++;return;}o.v+=f.v;o.n++;if(f.how!=='cong')o.deu=true;});return o;}
+function mgrFtCell(F){if(!F.n)return '<span class="muted">—</span>'+(F.skip?'<div class="sm muted">'+F.skip+' FT không lương</div>':'');return fmtVND(F.v)+'<div class="sm muted">'+F.n+' FT'+(F.deu?' · chia đều':'')+(F.skip?' · '+F.skip+' không lương':'')+'</div>';}
 
 /* ================= ĐÁNH GIÁ CORE TEAM =================
    Bám 4 file "Tiêu chí KPI tháng Q4/2026" (Phúc, Hùng, Thọ, Trang) đã ban hành và phiếu đánh giá cửa hàng trưởng (phụ lục file của Phúc).
