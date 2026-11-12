@@ -1,0 +1,17 @@
+{
+  "name": "Quản lý nhân sự Miền Nam",
+  "short_name": "Nhân sự",
+  "description": "Xếp ca, công, lương nhân sự các cơ sở Miền Nam HTD · nội bộ",
+  "lang": "vi",
+  "dir": "ltr",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "background_color": "#EDF0F4",
+  "theme_color": "#15803d",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
