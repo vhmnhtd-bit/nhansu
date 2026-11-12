@@ -4113,6 +4113,12 @@ var QUIT_REASONS=['Lý do cá nhân / gia đình','Đi học, thi cử','Chuyể
 var HR={site:'',from:'',to:'',q:'',role:'',state:'on',nostart:false,sel:null,edit:null,orgSite:''};
 view.mod=lsGet('hr_mod')||'dash';
 if(!MODS.some(function(m){return m[0]===view.mod;}))view.mod='dash';
+/* Mở thẳng Xếp ca → Lịch tuần (tuần hiện tại) khi đường dẫn có ?xem=lich-tuan – nút "Mở trang nhân sự" của app Vận hành Miền Nam.
+   Dán NGAY SAU 2 dòng:
+     view.mod=lsGet('hr_mod')||'dash';
+     if(!MODS.some(function(m){return m[0]===view.mod;}))view.mod='dash';
+   Xong thì xóa tham số khỏi thanh địa chỉ để lần tải lại sau không bị ép về Lịch tuần. */
+try{if(new URLSearchParams(location.search).get('xem')==='lich-tuan'){view.mod='xc';view.tab='week';view.week=mondayOf(new Date());lsSet('hr_mod','xc');if(history.replaceState)history.replaceState(null,'',location.pathname);}}catch(e){}
 
 /* ---------- tiện ích ---------- */
 function hrPeriod(){if(!HR.from||!HR.to){var m=monthOf(0);HR.from=m.from;HR.to=m.to;}return {from:HR.from,to:HR.to,ok:HR.from<=HR.to&&countDays(HR.from,HR.to)<=62};}
