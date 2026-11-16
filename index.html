@@ -11446,7 +11446,8 @@ var MO_BG=['#FCEDC2','#DCE6FF','#F8DCEF','#D3F0EA','#E7E0FB','#FDE1D0','#E3EFC8'
 var MO_INK=['#6B4800','#1D3CA3','#861D67','#0E5E54','#4C33A0','#8A380C','#3D5A0A','#0B5270'];
 function moLs(k,v){try{if(v===undefined)return localStorage.getItem(k);if(v===null)localStorage.removeItem(k);else localStorage.setItem(k,v);}catch(e){}return null;}
 function moNarrow(){return !!(window.matchMedia&&window.matchMedia('(max-width:600px)').matches);}
-function moOn(){return (ROLE==='cht'||ROLE==='demo')&&!!S&&view.mod==='xc'&&!view.loading&&!view.onboard&&(view.tab==='week'||view.tab==='pay')&&moLs('xc_mo')!=='0'&&moNarrow();}
+function moOnTab(t){return (ROLE==='cht'||ROLE==='demo')&&!!S&&view.mod==='xc'&&!view.loading&&!view.onboard&&(t==='week'||t==='pay')&&moLs('xc_mo')!=='0'&&moNarrow();}
+function moOn(){return moOnTab(view.tab);}
 function moView(){return moLs('xc_mview')==='staff'?'staff':'day';}
 function moIco(n){var P={week:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',pay:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
   don:'<path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 13h7M9 17h5"/>',more:'<path d="M4 6h16M4 12h16M4 18h16"/>'};
@@ -11454,6 +11455,11 @@ function moIco(n){var P={week:'<rect x="3" y="5" width="18" height="16" rx="2"/>
 function moShiftLab(sh){var t=shiftSpan(sh);return esc(sh.name)+(t&&sh.name!==minH(t[0])+'-'+minH(t[1])?' · '+minH(t[0])+'–'+minH(t[1]):'');}
 function moNr(k){return regUsed(k)?S.staff.filter(function(s){return inWeek(s,k)&&s.role==='PT'&&!S.reg[k][s.id];}).length:0;}
 function moYday(){return addDays(todayKey(),-1);}
+/* Nền sáng / tối (bổ sung 16/11): lưu trên máy (xc_theme = light | dark | auto). Chưa chọn: điện thoại dùng nền Sáng, máy tính
+   theo máy như cũ. Trang đã có sẵn bảng màu cho data-theme="light" / "dark", ở đây chỉ đặt thuộc tính. */
+function moTheme(){var t=moLs('xc_theme');return t==='light'||t==='dark'||t==='auto'?t:(moNarrow()?'light':'auto');}
+function moApplyTheme(){var t=moTheme(),r=document.documentElement;if(t==='auto')r.removeAttribute('data-theme');else r.setAttribute('data-theme',t);}
+moApplyTheme();
 
 /* ---------- đầu trang: site, tiêu đề, cách xem, tuần, dải 7 ngày ---------- */
 function moTop(t,k,st){
@@ -11603,6 +11609,8 @@ function moSheet(k,st){
     h+=moItem('data-act="tab" data-tab="staff"','Thiết lập nhân viên','vị trí, định mức, ca cố định')
       +moItem('data-act="tab" data-tab="demand"','Thiết lập site','ca làm, vị trí, định biên')
       +navGroups().filter(function(g){return g[0]!=='xc';}).map(function(g){return moItem('data-act="grp" data-v="'+g[0]+'"',esc(g[1]),'');}).join('')
+      +'<div class="mo-it mo-th"><b>Nền</b><div class="mo-seg" role="group" aria-label="Nền sáng hoặc tối">'
+      +[['light','Sáng'],['dark','Tối'],['auto','Theo máy']].map(function(x){var on=moTheme()===x[0];return '<button data-mo="theme" data-v="'+x[0]+'" class="'+(on?'on':'')+'" aria-pressed="'+on+'">'+x[1]+'</button>';}).join('')+'</div></div>'
       +moItem('data-mo="full"','Xem bản đầy đủ','giao diện như trên máy tính');}
   return '<div class="mo-back" data-mo="close"><div class="mo-panel" role="dialog" aria-label="'+esc(T)+'"><div class="mo-ph"><b>'+esc(T)+'</b><button class="mo-x" data-mo="close" aria-label="Đóng">×</button></div>'+h+'</div></div>';
 }
@@ -11622,7 +11630,10 @@ function moRender(){
 }
 var moRender0=render;
 render=function(){
-  if(S&&view.mod==='xc'){if(view.tab==='swap'||view.tab==='leave'||view.tab==='kpi'){view.xm=view.tab;view.tab='week';}if(view.tab==='reg')view.tab='week';}
+  if(S&&view.mod==='xc'){if(view.tab==='swap'||view.tab==='leave'||view.tab==='kpi'){view.xm=view.tab;view.tab='week';}if(view.tab==='reg')view.tab='week';
+    /* hộp Đổi ca / Nghỉ phép / Đối chiếu định biên chỉ hiện ở Lịch tuần: mở từ mục Công thì chuyển về Lịch tuần (sửa 16/11) */
+    if(view.xm&&view.tab==='pay'&&moOnTab('week'))view.tab='week';
+    if(view.xm)MO.sheet=null;}
   if(moOn())return moRender();
   document.body.classList.remove('mo-on');
   var r=moRender0.apply(this,arguments);
@@ -11637,7 +11648,8 @@ $app.addEventListener('click',function(e){
     else if(a==='mv'){moLs('xc_mview',v==='staff'?'staff':null);closePop();}
     else if(a==='pp'){MO.pp=v==='m'?'m':'w';MO.open=null;}
     else if(a==='pm'){var mo=moMonth(),y=+mo.slice(0,4),mm=+mo.slice(5,7)-1+(+v),dt=new Date(y,mm,1);MO.month=dt.getFullYear()+'-'+pad(dt.getMonth()+1);MO.open=null;}
-    else if(a==='nav'){if(v==='week'||v==='pay'){view.tab=v;MO.sheet=null;closePop();window.scrollTo(0,0);}else MO.sheet=MO.sheet===v?null:v;}
+    else if(a==='nav'){if(v==='week'||v==='pay'){view.tab=v;view.xm=null;MO.sheet=null;closePop();window.scrollTo(0,0);}else MO.sheet=MO.sheet===v?null:v;}
+    else if(a==='theme'){moLs('xc_theme',v==='light'||v==='dark'||v==='auto'?v:null);moApplyTheme();}
     else if(a==='sheet')MO.sheet=MO.sheet===v?null:v;
     else if(a==='close')MO.sheet=null;
     else if(a==='fp')MO.fp=v||'';
@@ -11689,6 +11701,7 @@ function moCss(){
   +'.mo-badge{position:absolute;top:2px;left:55%;background:var(--short);color:#fff;font-style:normal;font-size:10px;font-weight:700;border-radius:99px;padding:1px 6px}'
   +'.mo-back{position:fixed;inset:0;z-index:50;background:var(--scrim);display:flex;align-items:flex-end}.mo-panel{width:100%;max-height:82vh;overflow:auto;background:var(--sheet);border-radius:18px 18px 0 0;padding:6px 12px calc(14px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:6px}'
   +'.mo-ph{display:flex;align-items:center;padding:8px 4px}.mo-ph b{flex:1;font-size:16px}.mo-x{width:40px;height:40px;border:0;background:var(--ground);border-radius:99px;font-size:20px;color:var(--ink)}'
+  +'.mo-th{flex-direction:row!important;align-items:center!important;justify-content:space-between;gap:10px}'
   +'.mo-it{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;border:1px solid var(--line-2);background:var(--sheet);color:var(--ink);border-radius:12px;padding:11px 14px;font:inherit;min-height:48px}.mo-it b{font-size:14.5px}.mo-it small{font-size:12px;color:var(--muted)}.mo-it.mo-danger,.mo-it.mo-danger b{color:var(--short)}'
   +'.mo-back2{position:fixed;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:30;border:0;background:var(--accent);color:var(--accent-ink);border-radius:99px;padding:10px 14px;font:inherit;font-size:13px;font-weight:600;box-shadow:var(--shadow)}'
   +'@media (max-width:600px){body.mo-on #slotpop{left:0!important;right:0!important;top:auto!important;bottom:0!important;width:auto!important;max-width:none!important;max-height:82vh;border-radius:16px 16px 0 0;z-index:60;padding-bottom:calc(16px + env(safe-area-inset-bottom,0px))}body.mo-on #pop{z-index:60}}';
