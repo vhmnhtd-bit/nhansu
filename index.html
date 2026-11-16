@@ -11587,7 +11587,7 @@ function moActs(t,k,st){
     +'<button class="mo-btn mo-more" data-mo="sheet" data-v="acts" aria-label="Thao tác khác: gửi lịch nhân viên, xuất MISA, xoá lịch tuần">⋯</button></div>';
 }
 function moNav(t,k){
-  var nr=moNr(k),it=[['week','Lịch tuần'],['pay','Công'],['don','Đơn'],['more','Thêm']];
+  var nr=moNr(k),it=[['week','Lịch tuần'],['pay','Công'],['don','Đổi ca &amp; nghỉ'],['more','Thêm']];
   return '<nav class="mo-nav" aria-label="Menu">'+it.map(function(x){var on=x[0]===t&&!MO.sheet||MO.sheet===x[0];
     return '<button data-mo="nav" data-v="'+x[0]+'" class="'+(on?'on':'')+'"'+(on?' aria-current="page"':'')+'>'+moIco(x[0])+x[1]+(x[0]==='don'&&nr?'<i class="mo-badge">'+nr+'</i>':'')+'</button>';}).join('')+'</nav>';
 }
@@ -11600,7 +11600,7 @@ function moSheet(k,st){
       +moItem('data-act="regpull"','Cập nhật đăng ký ca','lấy đăng ký mới nhất của nhân viên')
       +(st.over&&canEdit()?cbtn('trimover','Gỡ '+st.over+' lượt dư','Bấm lần nữa để gỡ','mo-it'):'')
       +(canEdit()?cbtn('clear','Xoá lịch tuần này','Bấm lần nữa để xoá','mo-it mo-danger'):'');}
-  else if(MO.sheet==='don'){T='Đơn & đăng ký';var nr=moNr(k);
+  else if(MO.sheet==='don'){T='Đổi ca, nghỉ phép & đăng ký ca';var nr=moNr(k);
     h+=moItem('data-act="regpull"','Đăng ký ca tuần này',regUsed(k)?(nr?nr+' PT chưa đăng ký · bấm để cập nhật':'đã có đăng ký · bấm để cập nhật'):'chưa có đăng ký · bấm để cập nhật')
       +moItem('data-act="xmopen" data-v="swap"','Đổi ca / nhờ người thay','tạo, duyệt và hoàn tác đổi ca')
       +moItem('data-act="xmopen" data-v="leave"','Nghỉ phép','ghi nghỉ phép, xem các đơn')
