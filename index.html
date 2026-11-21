@@ -1657,7 +1657,7 @@ body{margin:0}
 @media (max-width:600px){.ab-in{padding:6px 16px}.ab-brand small,.ab-chip span{display:none}.ab-chip{padding:3px}.ab-chip svg{display:none}}
 </style>
 <div id="xc-login" class="xc-login" hidden></div>
-<script id="xc-shim">window.XC_BUILD='2026-11-21 14:32';
+<script id="xc-shim">window.XC_BUILD='2026-11-21 15:31';
 (function(){
 'use strict';
 var TOKEN_KEY='xc_token';
@@ -7237,7 +7237,7 @@ function removeAtom(k,sid,d,shId){
   var rest=shiftsOf(c.s).filter(function(z){return z!==shId;});
   if(!rest.length){setCell(k,sid,d,null);return;}
   var ps=JSON.parse(JSON.stringify(c.ps||{}));delete ps[shId];var p0=c.p;if(rest.every(function(z){return ps[z]&&ps[z]!==p0;}))p0=ps[rest[0]];rest.forEach(function(z){if(ps[z]===p0)delete ps[z];});
-  setCell(k,sid,d,{s:comboOf(rest),p:p0,ps:Object.keys(ps).length?ps:undefined,sw:c.sw,dv:c.dv});
+  setCell(k,sid,d,{s:comboOf(rest),p:p0,ps:Object.keys(ps).length?ps:undefined,sw:c.sw,dv:c.dv,call:c.call}); /* 21/11: giữ dấu CHT chủ động xếp */
 }
 function closeSlotPop(){var el=document.getElementById('slotpop');if(el)el.remove();}
 function openSlotPop(btn){openPicker(btn);} /* 14/11: danh sách chọn người 3 cột (openPicker) */
@@ -10989,9 +10989,14 @@ function dayEvPanel(){
   return h+'</div>';
 }
 
-/* ---------- 4) xem lịch theo ca ---------- */
+/* ---------- 4) xem lịch theo ca ----------
+   21/11/2026: mỗi dòng ca = khung định biên, người hiện ở dòng họ ĐƯỢC TÍNH LẤP (cellCredit, giống Kiểu 1, đầu cột, Đối chiếu),
+   không theo mã ca. Trước đây đếm theo mã ca: làm 8h30–13h (định biên 0) hiện "2/0 dư 2" còn dòng 9h30–13h "0/2" dù đã đủ.
+   Nhãn dưới tên vẫn ghi giờ làm thật (posIdsOf); rê chuột thấy "tính vào định biên ca …". Kiểm tra: source/guide/kiemtra.html. */
 function shiftPeople(k,d,shId){
-  var out=[];S.staff.forEach(function(st){var c=getCell(k,st.id,d);if(!c||!c.s||c.s==='O'||shiftsOf(c.s).indexOf(shId)<0)return;out.push({st:st,c:c,p:posOf(c,shId)});});
+  var out=[];S.staff.forEach(function(st){var c=getCell(k,st.id,d);if(!c||!c.s||c.s==='O')return;var cr=cellCredit(c,d);
+    if(cr[shId]){out.push({st:st,c:c,p:cr[shId]});return;}
+    if(shiftsOf(c.s).indexOf(shId)>=0&&!pos(posOf(c,shId)))out.push({st:st,c:c,p:null}); /* ca chưa chọn vị trí: vẫn hiện để CHT thấy mà gán */});
   var ix=function(p){for(var i=0;i<S.positions.length;i++)if(S.positions[i].id===p)return i;return 99;};
   return out.sort(function(a,b){return ix(a.p)-ix(b.p)||a.st.name.localeCompare(b.st.name);});
 }
@@ -11004,17 +11009,17 @@ function renderShiftBoard(k,cov,st){
     if(fo&&FLT.sh&&sh.id!==FLT.sh)return;
     var t=shiftSpan(sh),row='',has=false,short=false,who=false;
     for(var d=0;d<7;d++){
-      var P=shiftPeople(k,d,sh.id).filter(function(x){return !(fo&&FLT.pos)||x.p===FLT.pos;}),n=0,gaps=[];
-      S.positions.forEach(function(p){if(fo&&FLT.pos&&p.id!==FLT.pos)return;var nn=needF(d,sh.id,p.id),g=nn-cov[d][sh.id][p.id];n+=nn;if(g>0)gaps.push({p:p,g:g});});
+      var P=shiftPeople(k,d,sh.id).filter(function(x){return !(fo&&FLT.pos)||x.p===FLT.pos;}),n=0,hv=0,ovr=0,gaps=[];
+      S.positions.forEach(function(p){if(fo&&FLT.pos&&p.id!==FLT.pos)return;var nn=needF(d,sh.id,p.id),cc=cov[d][sh.id][p.id],g=nn-cc;n+=nn;hv+=cc;if(g>0)gaps.push({p:p,g:g});else ovr+=-g;});
       if(n||P.length)has=true;if(gaps.length)short=true;
-      var dk=addDays(k,d),cls=!n&&!P.length?'none':gaps.length?'short':P.length>n?'over':'ok';
+      var dk=addDays(k,d),cls=!n&&!P.length?'none':gaps.length?'short':ovr?'over':'ok';
       row+='<td class="bc b-'+cls+(dk===tk?' today':'')+'">';
-      if(n||P.length)row+='<div class="bch"><span class="bcnt">'+P.length+'/'+n+'</span>'+(gaps.length?'<span class="bnote">thiếu '+gaps.reduce(function(a,x){return a+x.g;},0)+'</span>':P.length>n?'<span class="bnote">dư '+(P.length-n)+'</span>':'')+'</div>';
+      if(n||P.length)row+='<div class="bch"><span class="bcnt">'+hv+'/'+n+'</span>'+(gaps.length?'<span class="bnote">thiếu '+gaps.reduce(function(a,x){return a+x.g;},0)+'</span>':ovr?'<span class="bnote">dư '+ovr+'</span>':'')+'</div>';
       P.forEach(function(x){
-        var q=pos(x.p),dim=fo&&fltPeopleOn()&&!fltWho(x.st),closed=q&&!posOpen(d,sh.id,x.p);if(fltPeopleOn()&&fltWho(x.st))who=true;
-        row+='<button class="bp'+(closed?' out':'')+(dim?' dim':'')+'" data-act="cell" data-cell="'+x.st.id+':'+d+'" title="'+esc(x.st.name+' · làm '+shiftLabel(x.c.s)+(q?' · '+q.name:'')+(closed?' · vị trí này không có định biên ở ca này':''))+'">'
+        var q=pos(x.p),dim=fo&&fltPeopleOn()&&!fltWho(x.st),closed=q&&!posOpen(d,sh.id,x.p),own=posIdsOf(x.c,x.p),lbl=spanLabel(own),other=own.indexOf(sh.id)<0;if(fltPeopleOn()&&fltWho(x.st))who=true;
+        row+='<button class="bp'+(closed?' out':'')+(dim?' dim':'')+'" data-act="cell" data-cell="'+x.st.id+':'+d+'" title="'+esc(x.st.name+' · làm '+shiftLabel(x.c.s)+(q?' · '+q.name:'')+(other?' · tính vào định biên ca '+sh.name:'')+(closed?' · vị trí này không có định biên ở ca này':''))+'">'
           +'<span class="bpn">'+esc(shortName(x.st.name))+(closed?'<i class="btag gay">ngoài định biên</i>':'')+'</span>'
-          +'<span class="bpw">'+(q?'<span class="chip pc'+q.c+'">'+esc(q.short||q.name)+'</span> ':'<span class="chip none">Chưa chọn vị trí</span> ')+'Làm <b>'+esc(spanLabel(shiftsOf(x.c.s)))+'</b></span></button>';
+          +'<span class="bpw">'+(q?'<span class="chip pc'+q.c+'">'+esc(q.short||q.name)+'</span> ':'<span class="chip none">Chưa chọn vị trí</span> ')+'Làm <b>'+esc(lbl)+'</b></span></button>';
       });
       gaps.forEach(function(x){for(var j=0;j<x.g;j++)row+=ed?'<button class="bslot" data-act="bslot" data-v="'+d+'|'+sh.id+'|'+x.p.id+'">+ '+esc(x.p.short||x.p.name)+'</button>':'<span class="bslot ro">trống '+esc(x.p.short||x.p.name)+'</span>';});
       row+='</td>';
@@ -11188,16 +11193,11 @@ $pop.addEventListener('click',function(e){
     setCell(k,sid,d,{s:v,p:cp.p,ps:cp.ps});markDirty();render();return;
   }
   if(a==='m'){
-    var cm=getCell(k,sid,d),Lm=(cm&&cm.s&&cm.s!=='O'&&cm.s!=='F')?shiftsOf(cm.s):[],vm=b.dataset.v,im=Lm.indexOf(vm);
-    if(im>=0)Lm.splice(im,1);else{if(overlapIds(Lm,vm)){toast('Ca '+shift(vm).name+' trùng giờ với ca đã chọn.');return;}Lm.push(vm);}
-    /* 21/11/2026 (Phúc): ca gãy ngoài đăng ký không chặn nữa: xếp luôn, ghi là CHT chủ động xếp (c.call) như ô gọi thêm người.
-       Trước đây phải sửa đăng ký ca rồi mới xếp được, quá rườm rà. Ô vẫn hiện trong Lưu ý nhân sự để nhớ báo nhân viên. */
-    var gm=Lm.length>1&&!splitOk(s,k,d,Lm);
-    if(!Lm.length){setCell(k,sid,d,null);markDirty();render();return;}
-    var nm2=comboOf(Lm),cpm=cellPos(s,k,d,shiftsOf(nm2),cm&&cm.s!=='O'?cm:null),om={s:nm2,p:cpm.p,ps:cpm.ps};
-    if(gm||(cm&&cm.call))om.call=1;
-    setCell(k,sid,d,om);markDirty();render();
-    if(gm&&!(cm&&cm.call&&isSplit(units(shiftsOf(cm.s)))))toast('Đã xếp ca gãy '+spanLabel(shiftsOf(nm2))+' cho '+(s?s.name:'')+'. Bạn này không đăng ký ca gãy ngày này: web ghi là CHT chủ động xếp, nhớ báo bạn ấy.',8000);
+    /* 21/11/2026 (Phúc): ca gãy ngoài đăng ký không chặn nữa: xếp luôn, ghi là CHT chủ động xếp (c.call). Luật chung ở popToggleShift. */
+    var rm=popToggleShift(k,s,d,b.dataset.v);
+    if(rm.err){toast(rm.err);return;}
+    markDirty();render();
+    if(rm.gay)toast('Đã xếp ca gãy '+rm.label+' cho '+(s?s.name:'')+'. Bạn này không đăng ký ca gãy ngày này: web ghi là CHT chủ động xếp, nhớ báo bạn ấy.',8000);
     return;
   }
   if(a==='pa'){if(!canEdit())return;var pv=b.dataset.v.split('|');if(!getCell(k,sid,d))return;setAtomPos(k,s,d,pv[0],pv[1]);markDirty();render();return;}
@@ -11610,6 +11610,9 @@ function dayPosPeople(k,d,pid){
     var t0=Math.min.apply(null,ids.map(function(id){var t=shiftSpan(shift(id));return t?t[0]:9999;}));out.push({st:st,c:c,ids:ids,t0:t0});});
   return out.sort(function(a,b){return a.t0-b.t0||a.st.name.localeCompare(b.st.name);});
 }
+/* 21/11/2026: các ca người đó LÀM THẬT ở vị trí pid (không phải ca định biên họ được tính lấp). Dùng cho nhãn giờ, nút ×, bấm tên.
+   Vd làm 8h30–13h, định biên chỉ có 9h30–13h: tính vào chỗ 9h30–13h nhưng nhãn ghi 8h30–13h, bấm × bỏ ca 8h30–13h. */
+function posIdsOf(c,pid){var A=shiftsOf(c&&c.s),L=A.filter(function(id){return posOf(c,id)===pid;});return L.length?L:A;}
 function ovGaps(k,cov,d,pid){
   var sh=[],ov=0;
   atomsByTime().forEach(function(x){var a=needF(d,x.id,pid),b=cov[d][x.id][pid]||0;if(b<a)sh.push([x,a-b]);else ov+=b-a;});
@@ -11626,10 +11629,10 @@ function renderOverview(k,cov,st,o){
     var cells=P.map(function(p){
       var L=dayPosPeople(k,d,p.id),g=ovGaps(k,cov,d,p.id);tot+=g.n;tov+=g.ov;
       var c='<td class="ovc'+(g.n?' short':'')+'">';
-      L.forEach(function(x){var alt=skillRank(x.st,p.id)>0,lbl=spanLabel(x.ids);
+      L.forEach(function(x){var alt=skillRank(x.st,p.id)>0,own=posIdsOf(x.c,p.id),lbl=spanLabel(own),slot=spanLabel(x.ids),tip=x.st.name+' · làm '+lbl+(slot!==lbl?' · tính vào định biên '+slot:'')+(alt?' · vị trí phụ':'');
         var inner='<b>'+esc(tcase(shortName(x.st.name)))+'</b><small>'+esc(lbl)+'</small>';
-        c+=ed?'<div class="ovpw"><button class="ovp pc'+p.c+'" data-act="pname" data-cell="'+x.st.id+':'+d+'" data-v="'+x.ids[0]+'|'+p.id+'" title="'+esc(x.st.name+' · '+lbl+(alt?' · vị trí phụ':''))+'">'+inner+'</button><button class="ovx pc'+p.c+'" data-act="prm" data-cell="'+x.st.id+':'+d+'" data-v="'+x.ids.join(',')+'" title="Bỏ '+esc(x.st.name)+' khỏi '+esc(lbl)+'" aria-label="Bỏ khỏi ca">×</button></div>'
-          :'<span class="ovp pc'+p.c+'" title="'+esc(x.st.name+' · '+lbl)+'">'+inner+'</span>';});
+        c+=ed?'<div class="ovpw"><button class="ovp pc'+p.c+'" data-act="pname" data-cell="'+x.st.id+':'+d+'" data-v="'+own[0]+'|'+p.id+'" title="'+esc(tip)+'">'+inner+'</button><button class="ovx pc'+p.c+'" data-act="prm" data-cell="'+x.st.id+':'+d+'" data-v="'+own.join(',')+'" title="Bỏ '+esc(x.st.name)+' khỏi '+esc(lbl)+'" aria-label="Bỏ khỏi ca">×</button></div>'
+          :'<span class="ovp pc'+p.c+'" title="'+esc(tip)+'">'+inner+'</span>';});
       g.sh.forEach(function(y){var t=shiftSpan(y[0]),lb=t?minH(t[0])+'–'+minH(t[1]):y[0].name;
         c+=ed?'<button class="ovgap" data-act="bslot" data-v="'+d+'|'+y[0].id+'|'+p.id+'">+ thiếu '+(y[1]>1?y[1]+' · ':'')+esc(lb)+'</button>':'<span class="ovgap">thiếu '+(y[1]>1?y[1]+' · ':'')+esc(lb)+'</span>';});
       if(g.ov)c+='<span class="ovover">dư '+g.ov+' lượt</span>';
@@ -11673,7 +11676,7 @@ function pickCands(k,d,shId,pid){
     var inf=staffInfo(k,st),full=ftDayMode(st)?(!cur.length&&inf.days>=Math.min(6,+st.max||6)):(inf.load+1>st.max);
     var tags=[];
     if(!trained)tags.push('chưa đào tạo');else if(rank>0)tags.push('vị trí phụ');
-    if(same||ov)tags.push('trùng ca '+shiftLabel(c.s));else if(busy)tags.push('đang làm '+shiftLabel(c.s)+', làm thêm');
+    if(same||ov)tags.push('trùng ca '+shiftLabel(c.s));else if(busy)tags.push('đang làm '+shiftLabel(c.s)+', làm thêm'+(!splitOk(st,k,d,sortIds(cur.concat([shId])))?' (thành ca gãy)':''));
     if(lv)tags.push('nghỉ phép');else if(c&&c.s==='O')tags.push('ô ghi Nghỉ');
     if(!a)tags.push('không đăng ký');
     if(full)tags.push('đủ ca tối đa');
@@ -11681,6 +11684,28 @@ function pickCands(k,d,shId,pid){
     out.push({st:st,c:c,g:g,rank:rank,full:full,same:same,ov:ov,reg:reg,lv:lv,a:a,tags:tags,h:weekHoursOf(k,st.id),regTxt:a==='A'?'Cả ngày':a?spanLabel(regList(a)):'—'});
   });
   return out.sort(function(x,y){return x.g-y.g||(x.full-y.full)||x.rank-y.rank||x.h-y.h||x.st.name.localeCompare(y.st.name);});
+}
+/* ================= LUẬT XẾP TAY DÙNG CHUNG (21/11/2026) =================
+   Mọi chỗ CHT xếp tay đi qua 2 hàm này, để Kiểu 1, 2, 3 và điện thoại cho phép / chặn giống nhau:
+   - pickAssign: chọn người cho 1 chỗ (ô "+ thiếu" ở Kiểu 1, Kiểu 3, lịch ngày).
+   - popToggleShift: bật / tắt 1 ca trong hộp xếp ca (Kiểu 2, điện thoại, hộp cũ).
+   Ô ngoài đăng ký, trùng nghỉ, hoặc thành ca gãy mà nhân viên không đăng ký ca gãy → vẫn xếp, ghi c.call = 1
+   (CHT chủ động xếp): Tự xếp giữ nguyên (repairSplits, planKeepCell bỏ qua ô call), Lưu ý nhân sự vẫn nhắc. */
+function pickAssign(k,sid,d,shId,pid,mode){
+  var st=staffById(sid),c0=getCell(k,sid,d),a=avail(st,k,d),lv=leaveOn(sid,k,d),reg=!!a&&availOk(a,shId),wasOff=!!(c0&&c0.s==='O');
+  if(mode==='move'&&c0&&c0.s&&c0.s!=='O'){if(covers(c0.s,shId))removeAtom(k,sid,d,shId);else shiftsOf(c0.s).forEach(function(id){if(overlapIds([id],shId))removeAtom(k,sid,d,id);});}
+  var c1=getCell(k,sid,d),ids=sortIds((c1&&c1.s&&c1.s!=='O'?shiftsOf(c1.s):[]).concat([shId])),gay=!splitOk(st,k,d,ids);
+  assignAtom(k,sid,d,shId,pid,!reg||!!lv||wasOff||gay);
+  return {gay:gay,call:!reg||!!lv||wasOff||gay};
+}
+function popToggleShift(k,s,d,shId){
+  var sid=s.id,cm=getCell(k,sid,d),Lm=(cm&&cm.s&&cm.s!=='O'&&cm.s!=='F')?shiftsOf(cm.s):[],im=Lm.indexOf(shId);
+  if(im>=0)Lm.splice(im,1);else{if(overlapIds(Lm,shId))return {err:'Ca '+shift(shId).name+' trùng giờ với ca đã chọn.'};Lm.push(shId);}
+  if(!Lm.length){setCell(k,sid,d,null);return {};}
+  var gm=Lm.length>1&&!splitOk(s,k,d,Lm),nm2=comboOf(Lm),cpm=cellPos(s,k,d,shiftsOf(nm2),cm&&cm.s!=='O'?cm:null),om={s:nm2,p:cpm.p,ps:cpm.ps,sw:cm&&cm.sw};
+  if(gm||(cm&&cm.call))om.call=1;
+  setCell(k,sid,d,om);
+  return {gay:gm&&!(cm&&cm.call&&isSplit(units(shiftsOf(cm.s)))),label:spanLabel(shiftsOf(nm2))};
 }
 function ovMin(ids,shId){var t=shiftSpan(shift(shId)),m=0;if(!t)return 0;ids.forEach(function(x){var q=shiftSpan(shift(x));if(q)m=Math.max(m,Math.min(q[1],t[1])-Math.max(q[0],t[0]));});return m;}
 function placeAt(btn,el){
@@ -11705,11 +11730,9 @@ function openPicker(btn){
   el.innerHTML=h;document.body.appendChild(el);placeAt(btn,el);
   var done=function(sid,mode){
     var x=A.filter(function(q){return q.st.id===sid;})[0];if(!x)return;
-    if(mode==='move'){var cur=shiftsOf(x.c.s);if(x.same){removeAtom(k,sid,d,shId);}else cur.forEach(function(id){if(overlapIds([id],shId))removeAtom(k,sid,d,id);});}
-    var call=!x.reg||!!x.lv||!!(x.c&&x.c.s==='O');
-    assignAtom(k,sid,d,shId,pid,call);
+    var r=pickAssign(k,sid,d,shId,pid,mode);
     closeSlotPop();markDirty();render();
-    toast('Đã xếp '+x.st.name+' · '+(p?p.name:'')+' ca '+(sh?sh.name:'')+(mode==='move'?' (chuyển từ ca '+shiftLabel(x.c.s)+').':'.'));
+    toast('Đã xếp '+x.st.name+' · '+(p?p.name:'')+' ca '+(sh?sh.name:'')+(mode==='move'?' (chuyển từ ca '+shiftLabel(x.c.s)+')':'')+(r.gay?'. Thành ca gãy ngoài đăng ký: web ghi là CHT chủ động xếp, nhớ báo bạn ấy.':'.'),r.gay?8000:undefined);
   };
   el.addEventListener('click',function(e){
     var b=e.target.closest('[data-sp]');if(!b)return;
