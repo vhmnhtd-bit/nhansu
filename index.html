@@ -530,7 +530,7 @@ table.gtbl{border-collapse:separate;border-spacing:0;width:100%;min-width:1180px
 .gpop .gp-sh.off b{color:var(--muted)}.gpop .gp-sh.clr b{color:var(--short)}
 .gpop .gp-multi{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:12.5px;color:var(--muted)}
 .gpop .gp-chip{border:1px solid var(--line);background:var(--sheet);border-radius:14px;padding:3px 10px;font-size:12.5px;font-weight:600;cursor:pointer}
-.gpop .gp-chip.on{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}.gpop .gp-chip.nosplit{opacity:.5;text-decoration:line-through}
+.gpop .gp-chip.on{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}.gpop .gp-chip.nosplit{border-style:dashed;border-color:var(--over);color:var(--over)}.gpop .gp-chip.nosplit::after{content:" · ca gãy";font-size:11px;font-weight:500}
 .gpop .gp-sub{font-size:12.5px;font-weight:600;color:var(--muted)}
 .gpop .gp-poss{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .gpop .gp-pos{border:0;border-radius:10px;padding:9px 11px;text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:2px;box-shadow:inset 0 0 0 2px transparent}
@@ -779,7 +779,7 @@ span.clab[class*=" k-"]{display:inline-block;padding:2px 8px;border-radius:6px;f
 .corechg .cin{color:var(--ok);font-weight:600}
 .corechg .cout{color:var(--short);font-weight:600}
 .coregrid td.k-na{background:repeating-linear-gradient(135deg,var(--ground) 0 4px,var(--sheet) 4px 8px)}
-.opt.nosplit{opacity:.45;text-decoration:line-through}
+.opt.nosplit{border-style:dashed;border-color:var(--over);color:var(--over)}
 /* phương án Tự xếp: 4 cột, chỗ khác nhau, xem trước 2 chế độ */
 .plcmp.n4 thead th{width:21%}
 .plcmp tr.same td{color:var(--muted);font-weight:400}
@@ -1657,7 +1657,7 @@ body{margin:0}
 @media (max-width:600px){.ab-in{padding:6px 16px}.ab-brand small,.ab-chip span{display:none}.ab-chip{padding:3px}.ab-chip svg{display:none}}
 </style>
 <div id="xc-login" class="xc-login" hidden></div>
-<script id="xc-shim">window.XC_BUILD='2026-11-21 11:30';
+<script id="xc-shim">window.XC_BUILD='2026-11-21 14:32';
 (function(){
 'use strict';
 var TOKEN_KEY='xc_token';
@@ -3127,7 +3127,7 @@ function renderGPop(focus){
   var AT=atomShifts();
   if(has&&AT.length>1&&c.s!=='F'){var curA=shiftsOf(c.s);
     h+='<div class="gp-multi"><span>Làm nhiều ca trong ngày:</span>'+AT.map(function(sh){var on=curA.indexOf(sh.id)>=0,nx=on?curA.filter(function(x){return x!==sh.id;}):curA.concat([sh.id]),bad=nx.length>1&&!splitOk(s,k,d,nx);
-      return '<button class="gp-chip'+(on?' on':'')+(bad?' nosplit':'')+'" data-pop="m" data-v="'+sh.id+'" aria-pressed="'+on+'"'+(bad?' title="Thành ca gãy: nhân viên không đăng ký ca gãy ngày này"':'')+'>'+(on?'✓ ':'+ ')+esc(sh.name)+'</button>';}).join('')+'</div>';}
+      return '<button class="gp-chip'+(on?' on':'')+(bad?' nosplit':'')+'" data-pop="m" data-v="'+sh.id+'" aria-pressed="'+on+'"'+(bad?' title="Thành ca gãy ngoài đăng ký: bấm là xếp luôn, web ghi CHT chủ động xếp"':'')+'>'+(on?'✓ ':'+ ')+esc(sh.name)+'</button>';}).join('')+'</div>';}
   h+='</div>';
   /* bước 2: vị trí */
   if(has){
@@ -11116,7 +11116,7 @@ function renderPop(focus){
   if(c.sw){var sw=S.swaps.filter(function(w){return w.id===c.sw;})[0];if(sw)h+='<p class="sm muted">Đổi ca: '+esc(sw.summary)+'</p>';}
   h+='<div class="pop-lbl">Ca</div><div class="seg">'+opts.map(function(o){return '<button class="opt'+(sameS(c.s||'',o[0])?' on':'')+'" data-pop="s" data-v="'+o[0]+'">'+(o[0]&&o[0]!=='O'?'<span>'+shDot(o[0]==='F'?-1:shIdx(o[0]))+esc(o[1])+'</span>':esc(o[1]))+(o[2]?'<small>'+esc(o[2])+'</small>':'')+'</button>';}).join('')+'</div>';
   var AT=atomShifts();if(AT.length>1){var curA=(c.s&&c.s!=='O'&&c.s!=='F')?shiftsOf(c.s):[];
-    h+='<div class="pop-lbl">Ca gãy / làm nhiều ca <small>bấm chọn từng ca, ví dụ ca sáng + ca tối</small></div><div class="seg">'+AT.map(function(sh){var on=curA.indexOf(sh.id)>=0,nx=on?curA.filter(function(x){return x!==sh.id;}):curA.concat([sh.id]),bad=nx.length>1&&!splitOk(s,k,d,nx);return '<button class="opt'+(on?' on':'')+(bad?' nosplit':'')+'" data-pop="m" data-v="'+sh.id+'" aria-pressed="'+on+'"'+(bad?' title="Tạo thành ca gãy: nhân viên không đăng ký ca gãy ngày này"':'')+'><span>'+shDot(shIdx(sh.id))+esc(sh.name)+'</span>'+(sh.time?'<small>'+esc(sh.time)+'</small>':'')+'</button>';}).join('')+'</div>';}
+    h+='<div class="pop-lbl">Ca gãy / làm nhiều ca <small>bấm chọn từng ca, ví dụ ca sáng + ca tối</small></div><div class="seg">'+AT.map(function(sh){var on=curA.indexOf(sh.id)>=0,nx=on?curA.filter(function(x){return x!==sh.id;}):curA.concat([sh.id]),bad=nx.length>1&&!splitOk(s,k,d,nx);return '<button class="opt'+(on?' on':'')+(bad?' nosplit':'')+'" data-pop="m" data-v="'+sh.id+'" aria-pressed="'+on+'"'+(bad?' title="Thành ca gãy ngoài đăng ký: bấm là xếp luôn, web ghi CHT chủ động xếp"':'')+'><span>'+shDot(shIdx(sh.id))+esc(sh.name)+'</span>'+(sh.time?'<small>'+esc(sh.time)+'</small>':'')+'</button>';}).join('')+'</div>';}
   if(c.s&&c.s!=='O'){
     var atomsP=shiftsOf(c.s);
     if(atomsP.length>1){
@@ -11190,9 +11190,15 @@ $pop.addEventListener('click',function(e){
   if(a==='m'){
     var cm=getCell(k,sid,d),Lm=(cm&&cm.s&&cm.s!=='O'&&cm.s!=='F')?shiftsOf(cm.s):[],vm=b.dataset.v,im=Lm.indexOf(vm);
     if(im>=0)Lm.splice(im,1);else{if(overlapIds(Lm,vm)){toast('Ca '+shift(vm).name+' trùng giờ với ca đã chọn.');return;}Lm.push(vm);}
-    if(Lm.length>1&&!splitOk(s,k,d,Lm)){toast('Không xếp ca gãy cho '+(s?s.name:'')+': bạn này không đăng ký ca gãy ngày này. Nếu bạn đồng ý làm ca gãy, sửa đăng ký ở tab Đăng ký ca trước.',8000);return;}
+    /* 21/11/2026 (Phúc): ca gãy ngoài đăng ký không chặn nữa: xếp luôn, ghi là CHT chủ động xếp (c.call) như ô gọi thêm người.
+       Trước đây phải sửa đăng ký ca rồi mới xếp được, quá rườm rà. Ô vẫn hiện trong Lưu ý nhân sự để nhớ báo nhân viên. */
+    var gm=Lm.length>1&&!splitOk(s,k,d,Lm);
     if(!Lm.length){setCell(k,sid,d,null);markDirty();render();return;}
-    var nm2=comboOf(Lm),cpm=cellPos(s,k,d,shiftsOf(nm2),cm&&cm.s!=='O'?cm:null);setCell(k,sid,d,{s:nm2,p:cpm.p,ps:cpm.ps});markDirty();render();return;
+    var nm2=comboOf(Lm),cpm=cellPos(s,k,d,shiftsOf(nm2),cm&&cm.s!=='O'?cm:null),om={s:nm2,p:cpm.p,ps:cpm.ps};
+    if(gm||(cm&&cm.call))om.call=1;
+    setCell(k,sid,d,om);markDirty();render();
+    if(gm&&!(cm&&cm.call&&isSplit(units(shiftsOf(cm.s)))))toast('Đã xếp ca gãy '+spanLabel(shiftsOf(nm2))+' cho '+(s?s.name:'')+'. Bạn này không đăng ký ca gãy ngày này: web ghi là CHT chủ động xếp, nhớ báo bạn ấy.',8000);
+    return;
   }
   if(a==='pa'){if(!canEdit())return;var pv=b.dataset.v.split('|');if(!getCell(k,sid,d))return;setAtomPos(k,s,d,pv[0],pv[1]);markDirty();render();return;}
   if(a==='p'){var cu=getCell(k,sid,d);if(!cu)return;setCell(k,sid,d,{s:cu.s,p:b.dataset.v});markDirty();closePop();render();}
